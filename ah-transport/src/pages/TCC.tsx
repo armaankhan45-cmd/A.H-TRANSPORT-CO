@@ -3,14 +3,14 @@ import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Select, Textarea, Modal } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, todayISO, uid, nextSeq } from "../company";
-import { downloadTCC } from "../pdf";
-import TCCPreview from "../components/TCCPreview";
+import { downloadTCC, printCanvas } from "../pdf";
+import TCCPreview, { TCC_H, TCC_W } from "../components/TCCPreview";
 import type { TCC } from "../types";
 
 const DECL = "We hereby declare that the tanker has been thoroughly cleaned and is fit to carry the next product.";
 
 export default function TCCPage() {
-  const { db, set, toast, user } = useStore();
+  const { db, set, toast, user, firm } = useStore();
   const [q, setQ] = useState("");
   const [form, setForm] = useState<TCC | null>(null);
   const [preview, setPreview] = useState<TCC | null>(null);
@@ -36,13 +36,7 @@ export default function TCCPage() {
     setForm(null);
   };
 
-  const doPrint = () => {
-    const html = printRef.current?.innerHTML || "";
-    const w = window.open("", "_blank", "width=900,height=1000");
-    if (!w) return toast("Allow pop-ups to print", "error");
-    w.document.write(`<html><head><title>TCC</title><style>@page{size:A4;margin:10mm}body{margin:0;font-family:Georgia,serif}</style></head><body>${html}</body></html>`);
-    w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
-  };
+  const doPrint = () => { if (!printCanvas(printRef.current, "TCC", TCC_W, TCC_H)) toast("Allow pop-ups to print", "error"); };
 
   return (
     <div>
@@ -67,7 +61,7 @@ export default function TCCPage() {
                 <div className="flex gap-1">
                   <button onClick={() => setPreview(t)} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button onClick={() => setForm({ ...t })} className="p-1.5 rounded hover:bg-gray-100" title="Edit"><Pencil className="w-4 h-4 text-blue-600" /></button>
-                  <button onClick={() => { downloadTCC(t, vehicle(t.vehicleId), driver(t.driverId)); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100" title="Download PDF"><Download className="w-4 h-4 text-green-700" /></button>
+                  <button onClick={() => { void downloadTCC(t, vehicle(t.vehicleId), driver(t.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100" title="Download PDF"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
             </tr>
@@ -105,12 +99,12 @@ export default function TCCPage() {
           <div>
             <div className="flex flex-wrap gap-2 mb-3 no-print">
               <Button variant="secondary" onClick={doPrint}><Printer className="w-4 h-4" /> Print A4</Button>
-              <Button variant="secondary" onClick={() => downloadTCC(preview, vehicle(preview.vehicleId), driver(preview.driverId))}><Download className="w-4 h-4" /> Download PDF</Button>
+              <Button variant="secondary" onClick={() => downloadTCC(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
               <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`A.H. TRANSPORT CO. — TCC ${preview.tccNo} dated ${fmtDate(preview.date)} for vehicle ${vehicle(preview.vehicleId)?.regNo}. Tanker cleaned & fit for next product.`)}`, "_blank")}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
               <Button variant="secondary" onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(`A.H. Transport Co. TCC ${preview.tccNo}`)}&body=${encodeURIComponent(`TCC No: ${preview.tccNo}\nDate: ${fmtDate(preview.date)}\nVehicle: ${vehicle(preview.vehicleId)?.regNo}\nRecipient: ${preview.recipient}`)}`; }}><Mail className="w-4 h-4" /> Email</Button>
               <Button variant="secondary" onClick={() => setForm({ ...preview })}><Pencil className="w-4 h-4" /> Edit</Button>
             </div>
-            <div ref={printRef}><TCCPreview tcc={preview} vehicle={vehicle(preview.vehicleId)} driver={driver(preview.driverId)} /></div>
+            <div ref={printRef}><TCCPreview tcc={preview} vehicle={vehicle(preview.vehicleId)} driver={driver(preview.driverId)} firm={firm} /></div>
           </div>
         )}
       </Modal>

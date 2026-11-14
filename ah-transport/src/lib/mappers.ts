@@ -212,3 +212,11 @@ export const COLLS: Coll[] = [
     }),
   },
 ];
+
+
+/** Every collection carries its firm (column `firm`, see migration 0006). */
+COLLS.forEach((c) => {
+  const from = c.fromRow, to = c.toRow;
+  c.fromRow = (r) => ({ ...from(r), firm: r.firm || "ah-transport" });
+  c.toRow = (i) => ({ ...to(i), firm: i.firm || "ah-transport" });
+});
