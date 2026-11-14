@@ -9,7 +9,7 @@ import type { Expense } from "../types";
 const blank = (): Expense => ({ id: "", vehicleId: "", date: todayISO(), amount: 0, category: "Diesel", description: "", receipt: "", method: "Cash" });
 
 export default function Expenses() {
-  const { db, set, toast } = useStore();
+  const { db, set, toast, firm } = useStore();
   const [q, setQ] = useState("");
   const [catF, setCatF] = useState("");
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -42,7 +42,7 @@ export default function Expenses() {
   return (
     <div>
       <PageHeader title="Expense Management" subtitle="Diesel, toll, repairs, maintenance, permits, tax and office costs"
-        actions={<><Button variant="secondary" onClick={() => { downloadReport("Expense Report", ["Date", "Vehicle", "Category", "Description", "Amount", "Method"], list.map((e) => [e.date, db.vehicles.find((v) => v.id === e.vehicleId)?.regNo || "Office", e.category, e.description, String(e.amount), e.method])); toast("PDF exported"); }}><Download className="w-4 h-4" /> Export PDF</Button><Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add Expense</Button></>} />
+        actions={<><Button variant="secondary" onClick={() => { downloadReport("Expense Report", ["Date", "Vehicle", "Category", "Description", "Amount", "Method"], list.map((e) => [e.date, db.vehicles.find((v) => v.id === e.vehicleId)?.regNo || "Office", e.category, e.description, String(e.amount), e.method]), firm); toast("PDF exported"); }}><Download className="w-4 h-4" /> Export PDF</Button><Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add Expense</Button></>} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <Stat label="This month" value={fmtINR(monthExp.reduce((a, e) => a + e.amount, 0))} sub={`${monthExp.length} entries`} icon={<IndianRupee className="w-5 h-5" />} tone="red" />

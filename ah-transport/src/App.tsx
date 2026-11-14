@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Truck, FileText, Wrench, CalendarClock, Users, Link2, ReceiptText, Droplets,
   Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2,
 } from "lucide-react";
-import { COMPANY, daysLeft, fmtDate } from "./company";
+import { daysLeft, fmtDate } from "./company";
 import { Badge, Button } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -47,7 +47,7 @@ export const NAV = [
 const TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.key, n.label]));
 
 function Shell() {
-  const { user, db, logout, can, toasts, reset, booting } = useStore();
+  const { user, db, logout, can, toasts, reset, booting, firm, firms, switchFirm } = useStore();
   const [page, setPage] = useState("dashboard");
   const [sidebar, setSidebar] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -133,6 +133,16 @@ function Shell() {
           </div>
           <button className="lg:hidden ml-auto" onClick={() => setSidebar(false)}><X className="w-5 h-5" /></button>
         </div>
+        {user?.role !== "Driver" && (
+          <div className="px-3 py-2 border-b border-green-900">
+            <label className="block text-[10px] uppercase tracking-wide text-green-300 mb-1">Firm</label>
+            <select value={firm.id} onChange={(e) => { switchFirm(e.target.value); setPage("dashboard"); }}
+              className="w-full rounded-md bg-green-900 text-white text-sm font-semibold px-2 py-1.5 border border-green-700 focus:outline-none">
+              {firms.map((f) => <option key={f.id} value={f.id}>{f.display}</option>)}
+            </select>
+            {firm.placeholder && <p className="mt-1 text-[10px] text-amber-300">Firm details are placeholders - update them in company.ts.</p>}
+          </div>
+        )}
         <nav className="flex-1 overflow-y-auto py-2">
           {nav.map((n) => {
             const Icon = n.icon;
@@ -147,8 +157,8 @@ function Shell() {
           })}
         </nav>
         <div className="p-3 border-t border-green-900 text-[11px] text-green-300">
-          <p className="truncate">{COMPANY.email}</p>
-          <p>{COMPANY.phones[0]}</p>
+          <p className="truncate">{firm.email}</p>
+          <p>{firm.phones[0]}</p>
         </div>
       </aside>
       {sidebar && <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebar(false)} />}
@@ -214,7 +224,7 @@ function Shell() {
 
         <main className="p-3 sm:p-5 flex-1 min-w-0">{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
-          <span>{COMPANY.name} — {COMPANY.address}</span>
+          <span>{firm.name} — {firm.address}</span>
           {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}
         </footer>
       </div>

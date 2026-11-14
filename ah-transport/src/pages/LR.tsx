@@ -3,14 +3,14 @@ import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, Tabs, Confirm, Empty } from "../ui";
 import { Plus, Printer, Download, Share2, Eye, Pencil, FileText, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, fmtINR, todayISO, uid, nextSeq } from "../company";
-import { downloadLR } from "../pdf";
-import LRPreview from "../components/LRPreview";
+import { downloadLR, printCanvas } from "../pdf";
+import LRPreview, { LR_H, LR_W } from "../components/LRPreview";
 import type { LR } from "../types";
 
 const blank = (lrNo: string): LR => ({ id: "", lrNo, date: todayISO(), from: "", to: "", consignor: "", consignorAddr: "", consignee: "", consigneeAddr: "", vehicleId: "", goods: "", quantity: "", gross: "", tare: "", net: "", freight: "", value: "Not Declared", beNo: "", reportingDT: "", unloadingDT: "", startKm: "", status: "Draft", driverId: "" });
 
 export default function LRPage() {
-  const { db, set, toast, user } = useStore();
+  const { db, set, toast, user, firm } = useStore();
   const [q, setQ] = useState("");
   const [statusF, setStatusF] = useState("");
   const [form, setForm] = useState<LR | null>(null);
@@ -61,13 +61,7 @@ export default function LRPage() {
   const shareEmail = (lr: LR) => {
     window.location.href = `mailto:?subject=${encodeURIComponent(`A.H. Transport Co. LR ${lr.lrNo}`)}&body=${encodeURIComponent(`LR No: ${lr.lrNo}\nDate: ${fmtDate(lr.date)}\nConsignor: ${lr.consignor}\nConsignee: ${lr.consignee}\nVehicle: ${vehicle(lr.vehicleId)?.regNo}\nFreight: Rs ${lr.freight}\n\nPlease find the PDF attached (download from the app).`)}`;
   };
-  const doPrint = () => {
-    const html = printRef.current?.innerHTML || "";
-    const w = window.open("", "_blank", "width=900,height=1000");
-    if (!w) return toast("Allow pop-ups to print", "error");
-    w.document.write(`<html><head><title>LR</title><style>@page{size:A4;margin:8mm}body{margin:0;font-family:Georgia,serif}</style></head><body>${html}</body></html>`);
-    w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
-  };
+  const doPrint = () => { if (!printCanvas(printRef.current, "LR", LR_W, LR_H)) toast("Allow pop-ups to print", "error"); };
 
   const totals = useMemo(() => ({ total: db.lrs.length, drafts: db.lrs.filter((l) => l.status === "Draft").length, freight: db.lrs.filter((l) => l.status === "Final").reduce((a, l) => a + Number(l.freight || 0), 0) }), [db.lrs]);
 
@@ -97,7 +91,7 @@ export default function LRPage() {
                 <div className="flex gap-1">
                   <button title="View / print" onClick={() => setPreview(l)} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button title="Edit" onClick={() => setForm({ ...l })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
-                  <button title="Download PDF" onClick={() => { downloadLR(l, vehicle(l.vehicleId), driver(l.driverId)); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100"><Download className="w-4 h-4 text-green-700" /></button>
+                  <button title="Download PDF" onClick={() => { void downloadLR(l, vehicle(l.vehicleId), driver(l.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
             </tr>
@@ -157,12 +151,12 @@ export default function LRPage() {
           <div>
             <div className="flex flex-wrap gap-2 mb-3 no-print">
               <Button variant="secondary" onClick={doPrint}><Printer className="w-4 h-4" /> Print A4</Button>
-              <Button variant="secondary" onClick={() => downloadLR(preview, vehicle(preview.vehicleId), driver(preview.driverId))}><Download className="w-4 h-4" /> Download PDF</Button>
+              <Button variant="secondary" onClick={() => downloadLR(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
               <Button variant="secondary" onClick={() => shareWhatsApp(preview)}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
               <Button variant="secondary" onClick={() => shareEmail(preview)}><Mail className="w-4 h-4" /> Email</Button>
               <Button variant="secondary" onClick={() => setForm({ ...preview })}><Pencil className="w-4 h-4" /> Edit</Button>
             </div>
-            <div ref={printRef}><LRPreview lr={preview} vehicle={vehicle(preview.vehicleId)} driver={driver(preview.driverId)} /></div>
+            <div ref={printRef}><LRPreview lr={preview} vehicle={vehicle(preview.vehicleId)} driver={driver(preview.driverId)} firm={firm} /></div>
           </div>
         )}
       </Modal>

@@ -11,7 +11,7 @@ import { COLLS, FILE_FIELDS, ROLE_FROM_DB, ROLE_TO_DB, type CollKey } from "./ma
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Any = any;
 export interface Patch { key: string; id: string; field: string; value: string }
-export type SeqPatch = { seq: "lr" | "tcc" | "trip"; next: number };
+export type SeqPatch = { seq: "lr" | "tcc" | "trip"; next: number; firm: string };
 
 const sb = () => { if (!supabase) throw new Error("Supabase is not configured"); return supabase; };
 const pathByUrl = new Map<string, string>();
@@ -19,7 +19,7 @@ export const clearFileCache = () => pathByUrl.clear();
 
 export const emptyDB = (): DB => ({
   users: [], vehicles: [], vehicleDocs: [], maintenance: [], drivers: [], assignments: [], customers: [], trips: [], lrs: [], tccs: [],
-  salaries: [], expenses: [], audits: [], driverDocs: [], driverHistory: [], seq: { lr: 1, tcc: 1, trip: 1 },
+  salaries: [], expenses: [], audits: [], driverDocs: [], driverHistory: [], seq: { lr: 1, tcc: 1, trip: 1 }, seqs: {},
   settings: { notifyDays: 30, trackingPolicy: "" }, locations: [],
 });
 
@@ -72,9 +72,10 @@ export async function pullAll(): Promise<DB> {
   });
   const sq = await sb().from("document_sequences").select("*");
   (sq.data || []).forEach((r: Any) => {
-    if (r.prefix === "LR") db.seq.lr = r.last_number + 1;
-    if (r.prefix === "TCC") db.seq.tcc = r.last_number + 1;
-    if (r.prefix === "TRIP") db.seq.trip = r.last_number + 1;
+    const q = ((db.seqs ||= {})[r.firm || "ah-transport"] ||= { lr: 1, tcc: 1, trip: 1 });
+    if (r.prefix === "LR") q.lr = r.last_number + 1;
+    if (r.prefix === "TCC") q.tcc = r.last_number + 1;
+    if (r.prefix === "TRIP") q.trip = r.last_number + 1;
   });
 
   // derived link: driver.vehicleId comes from vehicle.driverId
@@ -154,10 +155,11 @@ export async function pushChanges(prev: DB, next: DB, userId?: string): Promise<
       const row = c.toRow(await toPath(item, c.key, patches));
       if (!old) {
         if (c.seq) {                                   // server hands out LR/TCC/TRIP numbers atomically
-          const no = await nextDocumentNo(c.seq.prefix);
+          const firm = item.firm || "ah-transport";
+          const no = await nextDocumentNo(c.seq.prefix, firm);
           row[c.seq.col] = no;
           if (no !== item[c.seq.field]) patches.push({ key: c.key, id: item.id, field: c.seq.field, value: no });
-          seqs.push({ seq: c.seq.seqKey, next: parseInt(no.split("/")[1], 10) + 1 });
+          seqs.push({ seq: c.seq.seqKey, next: parseInt(no.split("/")[1], 10) + 1, firm });
         }
         if (c.createdBy && userId) row.created_by = userId;
         const r = await client.from(c.table).insert(row); fail(c.table, r.error);

@@ -59,9 +59,9 @@ export async function uploadDataUrl(bucket: Bucket, folder: string, dataUrl: str
 }
 
 /** Atomic LR / TCC / TRIP number from the database. */
-export async function nextDocumentNo(prefix: "LR" | "TCC" | "TRIP"): Promise<string> {
+export async function nextDocumentNo(prefix: "LR" | "TCC" | "TRIP", firm = "ah-transport"): Promise<string> {
   if (!supabase) throw new Error("Supabase is not configured");
-  const { data, error } = await supabase.rpc("next_document_no", { p_prefix: prefix });
+  const { data, error } = await supabase.rpc("next_document_no", { p_prefix: prefix, p_firm: firm });
   if (error || !data) throw new Error(`Could not get ${prefix} number: ${error?.message ?? "empty"}`);
   return data as string;
 }
