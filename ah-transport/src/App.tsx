@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
+import { CONFIG_ERROR } from "./lib/supabase";
 import {
   LayoutDashboard, Truck, FileText, Wrench, CalendarClock, Users, Link2, ReceiptText, Droplets,
   Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2,
@@ -228,6 +229,25 @@ function Shell() {
   );
 }
 
+function Problem({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="min-h-screen grid place-items-center bg-gray-100 p-6">
+      <div className="max-w-md bg-white rounded-xl shadow p-6">
+        <h1 className="text-lg font-bold text-red-700">{title}</h1>
+        <p className="text-sm text-gray-700 mt-2 break-words">{detail}</p>
+        <button onClick={() => location.reload()} className="mt-4 px-4 py-2 rounded-lg bg-green-800 text-white text-sm">Reload</button>
+      </div>
+    </div>
+  );
+}
+
+class Boundary extends React.Component<{ children: React.ReactNode }, { err: Error | null }> {
+  state = { err: null as Error | null };
+  static getDerivedStateFromError(err: Error) { return { err }; }
+  render() { return this.state.err ? <Problem title="Something went wrong" detail={this.state.err.message} /> : this.props.children; }
+}
+
 export default function App() {
-  return <StoreProvider><Shell /></StoreProvider>;
+  if (CONFIG_ERROR) return <Problem title="App is not configured" detail={CONFIG_ERROR} />;
+  return <Boundary><StoreProvider><Shell /></StoreProvider></Boundary>;
 }

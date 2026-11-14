@@ -11,12 +11,22 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-export const DATA_MODE: "demo" | "supabase" =
-  (import.meta.env.VITE_DATA_MODE as string | undefined) === "supabase" && url && anonKey ? "supabase" : "demo";
+const REQUESTED = (import.meta.env.VITE_DATA_MODE as string | undefined)?.trim() === "supabase";
+export const DATA_MODE: "demo" | "supabase" = REQUESTED ? "supabase" : "demo";
 
-export const supabase: SupabaseClient | null = DATA_MODE === "supabase"
-  ? createClient(url!, anonKey!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
-  : null;
+/** Set when VITE_DATA_MODE=supabase but the URL / key are missing or malformed. The app then shows a clear message instead of a blank page. */
+export let CONFIG_ERROR: string | null = null;
+let client: SupabaseClient | null = null;
+if (REQUESTED) {
+  const u = url?.trim(); const k = anonKey?.trim();
+  if (!u || !k) CONFIG_ERROR = "VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY is missing in the Vercel environment variables.";
+  else if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(u)) CONFIG_ERROR = `VITE_SUPABASE_URL looks wrong ("${u.slice(0, 40)}"). It must look like https://abcdxyz.supabase.co (no quotes, no /rest/v1, no spaces).`;
+  else {
+    try { client = createClient(u.replace(/\/$/, ""), k, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }); }
+    catch (e) { CONFIG_ERROR = `Could not start Supabase: ${(e as Error).message}`; }
+  }
+}
+export const supabase: SupabaseClient | null = client;
 
 export type Bucket = "vehicle-docs" | "driver-docs" | "receipts" | "invoices" | "photos";
 
