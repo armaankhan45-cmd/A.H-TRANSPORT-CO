@@ -16,7 +16,7 @@ export const MAINT_STATUSES = ["Scheduled", "In Progress", "Completed", "Cancell
 export const TRIP_STATUSES = ["Planned", "Vehicle Assigned", "Loading", "In Transit", "Reported", "Waiting for Unloading", "Unloaded", "Completed", "Cancelled"];
 export const EXP_CATS = ["Diesel", "Toll", "Driver allowance", "Repair", "Maintenance", "Tyres", "Insurance", "Permit", "Tax", "Office expenses", "Other"];
 export const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-export function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
+export function uid() { return crypto.randomUUID(); }
 export function todayISO() { return new Date().toISOString().slice(0, 10); }
 export function fmtDate(d: string) { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
 export function fmtINR(n: number) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }

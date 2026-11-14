@@ -109,7 +109,7 @@ export default function Expenses() {
             <Field label="Amount (₹)" required><Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} /></Field>
             <Field label="Description" className="sm:col-span-2"><Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
             <Field label="Payment Method"><Select value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })}>{["Cash", "Bank Transfer", "UPI", "Cheque", "Credit"].map((m) => <option key={m}>{m}</option>)}</Select></Field>
-            <FileField label="Receipt upload" value={form.receipt} onChange={(n, d) => setForm({ ...form, receipt: d ? n : "" })} />
+            <FileField label="Receipt upload" value={form.receipt} onChange={(_n, d) => setForm({ ...form, receipt: d })} />
             <div className="sm:col-span-2 flex justify-end gap-2"><Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button><Button onClick={save}>Save Expense</Button></div>
           </div>
         )}

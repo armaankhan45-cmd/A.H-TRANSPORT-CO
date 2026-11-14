@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { StoreProvider, useStore, PERMISSIONS } from "./store";
+import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
 import {
   LayoutDashboard, Truck, FileText, Wrench, CalendarClock, Users, Link2, ReceiptText, Droplets,
   Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2,
@@ -46,7 +46,7 @@ export const NAV = [
 const TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.key, n.label]));
 
 function Shell() {
-  const { user, db, logout, can, toasts, reset } = useStore();
+  const { user, db, logout, can, toasts, reset, booting } = useStore();
   const [page, setPage] = useState("dashboard");
   const [sidebar, setSidebar] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -92,6 +92,7 @@ function Shell() {
     return r;
   }, [globalQ, db]);
 
+  if (booting) return <div className="min-h-screen grid place-items-center text-sm text-gray-500">Loading…</div>;
   if (!user) return <Login />;
 
   const allowed = PERMISSIONS[user.role];
@@ -213,7 +214,7 @@ function Shell() {
         <main className="p-3 sm:p-5 flex-1 min-w-0">{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
           <span>{COMPANY.name} — {COMPANY.address}</span>
-          <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>
+          {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}
         </footer>
       </div>
 
