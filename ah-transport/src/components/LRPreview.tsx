@@ -20,9 +20,9 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
       <T x={1278} y={58} size={23} bold lh={29}>Mobile : {p1}</T>
       <T x={1378} y={87} size={23} bold lh={29}>{rest.map((p) => <div key={p}>{p}</div>)}</T>
       {firm.logo && <img src={logo} alt="" style={at(85, 95, 270, 105)} />}
-      <T x={430} y={92} w={885} size={84} bold align="center" ls={1} style={{ fontFamily: SERIF, fontWeight: 800, color: "#111" }}>{firm.display}</T>
+      <T x={430} y={83} w={885} size={92} bold align="center" ls={5} style={{ fontFamily: SERIF, fontWeight: 800, color: "#111" }}>{firm.display}</T>
       <div style={at(52, 197, 1486, 48, { background: "#222" })} />
-      <T x={52} y={208} w={1486} size={29} bold align="center" style={{ color: "#fff", fontFamily: SERIF }}>{firm.tagline}</T>
+      <T x={52} y={207} w={1486} size={30.5} bold align="center" ls={0.3} style={{ color: "#fff", fontFamily: SERIF }}>{firm.tagline}</T>
       <T x={52} y={246} w={1486} size={24} align="center">Office : {firm.address.replace(/^Office\s*:\s*/, "")}</T>
       <T x={52} y={271} w={1486} size={24} align="center"><b>E-mail :</b> {firm.email} | <b>Website :</b> {firm.website}</T>
       <H x={52} y={300} w={1490} />

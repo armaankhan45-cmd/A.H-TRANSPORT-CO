@@ -38,3 +38,6 @@ main .grid > *{min-width:0}              /* let grid cards shrink instead of pus
   .rtable td[colspan]{display:block;text-align:center}
 }
 @media (max-width:767px){ .rtable td .truncate,.rtable td.truncate{white-space:normal;overflow:visible;text-overflow:clip} .rtable td [class*="max-w-"]{max-width:none} }
+
+/* Bookman-style bold used for the printed letterhead on LR / TCC (TeX Gyre Bonum, GUST Font License - free to embed) */
+@font-face { font-family: "AH Bookman"; src: url("/fonts/texgyrebonum-bold.otf") format("opentype"); font-weight: 400 900; font-style: normal; font-display: block; }

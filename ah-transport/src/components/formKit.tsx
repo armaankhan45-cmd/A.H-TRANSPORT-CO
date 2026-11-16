@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 export const INK = "#0b2a8a";
 export const HAND = "'Caveat','Reenie Beanie',cursive";
 export const SERIF = "'Bookman Old Style','Rockwell',Georgia,'Times New Roman',serif";
+export const SERIF = "'AH Bookman','Bookman Old Style',Georgia,'Times New Roman',serif";
 
 export const at = (x: number, y: number, w?: number, h?: number, extra: CSSProperties = {}): CSSProperties => ({
   position: "absolute", left: x, top: y, boxSizing: "border-box",

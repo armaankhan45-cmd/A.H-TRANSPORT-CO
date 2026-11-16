@@ -46,6 +46,7 @@ async function capture(el: ReactElement, w: number): Promise<HTMLCanvasElement> 
   const root = createRoot(host);
   try {
     flushSync(() => root.render(el));
+    await document.fonts.load('800 40px "AH Bookman"').catch(() => undefined);
     await new Promise((r) => setTimeout(r, 120));
     const node = host.querySelector("[data-canvas]") as HTMLElement;
     await Promise.all([...host.querySelectorAll("img")].map((i) => i.decode().catch(() => undefined)));

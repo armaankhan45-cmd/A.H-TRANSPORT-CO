@@ -19,11 +19,11 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       <T x={1034} y={33} size={18} bold lh={18.5}>{rest.map((p) => <div key={p}>{p}</div>)}</T>
       {firm.logo && <img src={logo} alt="" style={at(88, 62, 204, 80)} />}
       {firm.logo && <img src={truck} alt="" style={at(1036, 100, 114, 54)} />}
-      <T x={300} y={68} w={720} size={74} bold align="center" style={{ fontFamily: SERIF, fontWeight: 800, color: "#1d3b26" }}>{firm.display}</T>
+      <T x={290} y={64} w={740} size={79} bold align="center" ls={0.5} style={{ fontFamily: SERIF, fontWeight: 800, color: "#1d3b26" }}>{firm.display}</T>
       <div style={at(66, 160, 1094, 47, { background: "#262626" })} />
-      <T x={66} y={171} w={1094} size={25} bold align="center" style={{ color: "#fff", fontFamily: SERIF }}>{firm.tagline}</T>
-      <T x={66} y={216} w={1094} size={22} align="center">Office : {firm.address.replace(/^Office\s*:\s*/, "")}</T>
-      <T x={66} y={242} w={1094} size={22} align="center"><b>E-mail :</b> {firm.email} | <b>Website :</b> {firm.website}</T>
+      <T x={66} y={171} w={1094} size={24.5} bold align="center" style={{ color: "#fff", fontFamily: SERIF }}>{firm.tagline}</T>
+      <T x={66} y={216} w={1094} size={20.8} align="center">Office : {firm.address.replace(/^Office\s*:\s*/, "")}</T>
+      <T x={66} y={242} w={1094} size={20.8} align="center"><b>E-mail :</b> {firm.email} | <b>Website :</b> {firm.website}</T>
       <H x={66} y={284} w={1094} />
 
       {/* addressee + date */}
@@ -32,6 +32,7 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       <V x={893} y={330} size={32}>{fmtDMY(tcc.date)}</V>
       <T x={182} y={350} size={25.5}>To,</T>
       <V x={182} y={392} w={480} size={34} style={{ whiteSpace: "pre-line", lineHeight: "56px" }}>{tcc.recipient}{"\n"}{tcc.recipientAddr}</V>
+      <V x={182} y={392} w={480} size={34} style={{ whiteSpace: "normal", lineHeight: "66px" }}>{tcc.recipient}<br />{tcc.recipientAddr}</V>
       <H x={182} y={570} w={470} t={1.5} />
 
       {/* body */}
@@ -47,6 +48,7 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       {text(824, "We hereby certify that the previous cargo loaded in the above vehicle was")}
       <H x={188} y={888} w={872} t={1.5} />
       <V x={188} y={852} w={872} size={40} align="center">{tcc.prevCargo}</V>
+      <V x={188} y={850} w={872} size={40} align="center">{tcc.prevCargo}</V>
       {text(924, "Each compartment of the vehicle has been cleaned properly as per", 187)}
       {text(977, "requirement and it is fit for carrying above product.", 187)}
       <V x={792} y={962} size={36}>{tcc.prevCargo}</V>
