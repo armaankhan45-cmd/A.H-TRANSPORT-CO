@@ -15,3 +15,26 @@ body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;backgr
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
 input,select,textarea{outline:none}
 @media print{ .no-print{display:none!important} body{background:#fff} }
+
+/* ---------- Phone layout ---------- */
+html,body{overflow-x:hidden}
+main .grid > *{min-width:0}              /* let grid cards shrink instead of pushing the page wider */
+@media (max-width:767px){
+  input,select,textarea{font-size:16px !important}   /* stops iOS zooming into fields */
+  main{padding:12px !important}
+  /* tables -> one card per row */
+  .rtable,.rtable tbody,.rtable tr,.rtable td{display:block;width:100%}
+  .rtable thead{display:none}
+  .rtable tbody{padding:8px;background:#f3f4f6}
+  .rtable tbody tr{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:6px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .rtable tbody tr:last-child{margin-bottom:0}
+  .rtable td{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:7px 0 !important;text-align:right;border-bottom:1px dashed #eef0f2;min-height:34px}
+  .rtable td:last-child{border-bottom:0}
+  .rtable td::before{content:attr(data-label);flex:0 0 auto;max-width:42%;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:#6b7280;text-align:left}
+  .rtable td[data-label=""]::before,.rtable td[data-label="Actions"]::before{display:none}
+  .rtable td[data-label="Actions"]{justify-content:flex-end;flex-wrap:wrap;gap:6px;padding-top:10px !important}
+  .rtable td[data-label="Actions"] button,.rtable td[data-label="Actions"] a{min-width:38px;min-height:38px}
+  .rtable td > *{min-width:0}
+  .rtable td[colspan]{display:block;text-align:center}
+}
+@media (max-width:767px){ .rtable td .truncate,.rtable td.truncate{white-space:normal;overflow:visible;text-overflow:clip} .rtable td [class*="max-w-"]{max-width:none} }
