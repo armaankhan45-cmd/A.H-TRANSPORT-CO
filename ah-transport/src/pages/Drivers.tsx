@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, FileField, Tabs, KV, Stat, Empty } from "../ui";
-import { Plus, Pencil, Eye, UserX, ShieldAlert, IdCard, Upload, UserCheck } from "lucide-react";
+import { Plus, Pencil, Eye, UserX, ShieldAlert, IdCard, Upload, UserCheck, Check, Circle, Truck } from "lucide-react";
+import TrackActions from "../components/TrackActions";
+import { assignDriver, releaseDriver } from "../assign";
 import { daysLeft, expiryInfo, fmtDate, fmtINR, todayISO, uid, netSalary } from "../company";
-import type { Driver, DriverDoc } from "../types";
+import type { DB, Driver, DriverDoc } from "../types";
 
 const blank = (): Driver => ({ id: "", name: "", mobile: "", altMobile: "", address: "", dob: "", joining: todayISO(), aadhaar: "", pan: "", licenceNo: "", licenceIssue: "", licenceExpiry: "", trainingNo: "", trainingExpiry: "", blood: "", salary: 0, emergency: "", photo: "", vehicleId: "", status: "Active", docs: "" });
+
+/** Adds or updates a driver paper (matched by name) so the form, the document list and the driver record stay in step. */
+function upsertDoc(d: DB, driverId: string, name: string, docNo: string, issue: string, expiry: string, img: { name: string; data: string } | null) {
+  const ex = d.driverDocs.find((x) => x.driverId === driverId && x.name === name);
+  if (ex) { if (docNo) ex.docNo = docNo; if (issue) ex.issueDate = issue; if (expiry) ex.expiryDate = expiry; if (img) { ex.fileName = img.name; ex.fileData = img.data; } }
+  else if (docNo || img) d.driverDocs.push({ id: uid(), driverId, name, docNo, issueDate: issue, expiryDate: expiry, fileName: img?.name || "", fileData: img?.data || "", remarks: "" });
+}
 
 const DRIVER_DOC_TYPES = ["Aadhaar Card", "PAN Card", "Driving Licence", "Hazardous Goods Training Card", "Medical Certificate", "Police Verification", "Other"];
 
@@ -14,7 +23,11 @@ export default function Drivers() {
   const [q, setQ] = useState("");
   const [statusF, setStatusF] = useState("");
   const [form, setForm] = useState<Driver | null>(null);
-  const [detail, setDetail] = useState<Driver | null>(null);
+  const [detail, setDetail] = useState<{ id: string; tab?: string; fresh?: boolean } | null>(null);
+  const detailD = db.drivers.find((x) => x.id === detail?.id);
+  const [aadhaarImg, setAadhaarImg] = useState<{ name: string; data: string } | null>(null);
+  const [licImg, setLicImg] = useState<{ name: string; data: string } | null>(null);
+  const closeForm = () => { setForm(null); setAadhaarImg(null); setLicImg(null); };
   const [showSensitive, setShowSensitive] = useState(false);
 
   const canSeeSensitive = user?.role === "Super Admin" || user?.role === "Admin";
@@ -28,7 +41,10 @@ export default function Drivers() {
     if (!form.name.trim()) return toast("Driver name is required", "error");
     if (!/^\d{10}$/.test(form.mobile.replace(/\s/g, ""))) return toast("Enter a valid 10-digit mobile number", "error");
     if (form.licenceExpiry && form.licenceExpiry < todayISO()) toast("Warning: licence already expired", "error");
+    const newId = form.id || uid();
     set((d) => {
+      upsertDoc(d, newId, "Aadhaar Card", form.aadhaar, "", "", aadhaarImg);
+      upsertDoc(d, newId, "Driving Licence", form.licenceNo, form.licenceIssue, form.licenceExpiry, licImg);
       if (form.id) {
         const i = d.drivers.findIndex((x) => x.id === form.id);
         const old = i >= 0 ? d.drivers[i] : null;
@@ -36,14 +52,16 @@ export default function Drivers() {
         if (old && old.status !== form.status) d.driverHistory.unshift({ id: uid(), driverId: form.id, date: todayISO(), status: form.status, note: `Status changed ${old.status} → ${form.status}` });
         d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver updated", detail: form.name });
       } else {
-        const id = uid();
+        const id = newId;
         d.drivers.push({ ...form, id });
         d.driverHistory.unshift({ id: uid(), driverId: id, date: form.joining || todayISO(), status: "Active", note: "Joined company" });
         d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver added", detail: form.name });
       }
     });
-    toast("Driver saved");
-    setForm(null);
+    const isNew = !form.id;
+    toast(isNew ? "Driver added — now add documents and assign a vehicle" : "Driver saved");
+    closeForm();
+    if (isNew) setDetail({ id: newId, tab: "Documents", fresh: true });
   };
 
   const setStatus = (d0: Driver, status: string) => {
@@ -98,7 +116,7 @@ export default function Drivers() {
                 <td className="px-3 py-2 text-xs">{fmtINR(d.salary)}</td>
                 <td className="px-3 py-2"><Badge cls={d.status === "Active" ? "bg-green-100 text-green-800" : d.status === "Resigned" ? "bg-red-100 text-red-800" : "bg-gray-200 text-gray-700"}>{d.status}</Badge></td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <button onClick={() => setDetail(d)} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
+                  <button onClick={() => setDetail({ id: d.id })} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button onClick={() => setForm({ ...d })} className="p-1.5 rounded hover:bg-gray-100" title="Edit"><Pencil className="w-4 h-4 text-blue-600" /></button>
                   {d.status === "Active" ? <button onClick={() => setStatus(d, "Inactive")} className="p-1.5 rounded hover:bg-gray-100" title="Deactivate"><UserX className="w-4 h-4 text-red-500" /></button> : <button onClick={() => setStatus(d, "Active")} className="p-1.5 rounded hover:bg-gray-100" title="Rejoin"><UserCheck className="w-4 h-4 text-green-600" /></button>}
                 </td>
@@ -108,7 +126,7 @@ export default function Drivers() {
         </Table>
       </Card>
 
-      <Modal open={!!form} onClose={() => setForm(null)} title={form?.id ? "Edit Driver" : "Add Driver"} wide>
+      <Modal open={!!form} onClose={closeForm} title={form?.id ? "Edit Driver" : "Add Driver"} wide>
         {form && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Field label="Full Name" required><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
@@ -118,6 +136,7 @@ export default function Drivers() {
             <Field label="Joining Date"><Input type="date" value={form.joining} onChange={(e) => setForm({ ...form, joining: e.target.value })} /></Field>
             <Field label="Blood Group"><Select value={form.blood} onChange={(e) => setForm({ ...form, blood: e.target.value })}><option value="">—</option>{["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((b) => <option key={b}>{b}</option>)}</Select></Field>
             <Field label="Address" className="sm:col-span-2 lg:col-span-3"><Textarea rows={2} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></Field>
+            <FileField label="Aadhaar card photo" value={aadhaarImg?.name || ""} onChange={(n, data) => setAadhaarImg({ name: n, data })} />
             <Field label="Aadhaar Number" hint="Masked for non-admin roles"><Input value={form.aadhaar} onChange={(e) => setForm({ ...form, aadhaar: e.target.value })} placeholder="XXXX-XXXX-1234" /></Field>
             <Field label="PAN Number"><Input value={form.pan} onChange={(e) => setForm({ ...form, pan: e.target.value })} /></Field>
             <Field label="Employment Status"><Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{["Active", "Inactive", "Resigned", "Rejoined"].map((s) => <option key={s}>{s}</option>)}</Select></Field>
@@ -125,26 +144,32 @@ export default function Drivers() {
             <Field label="Licence Issue Date"><Input type="date" value={form.licenceIssue} onChange={(e) => setForm({ ...form, licenceIssue: e.target.value })} /></Field>
             <Field label="Licence Expiry Date"><Input type="date" value={form.licenceExpiry} onChange={(e) => setForm({ ...form, licenceExpiry: e.target.value })} /></Field>
             <Field label="Hazardous Goods Training No."><Input value={form.trainingNo} onChange={(e) => setForm({ ...form, trainingNo: e.target.value })} /></Field>
+            <FileField label="Licence photo" value={licImg?.name || ""} onChange={(n, data) => setLicImg({ name: n, data })} />
             <Field label="Training Certificate Expiry"><Input type="date" value={form.trainingExpiry} onChange={(e) => setForm({ ...form, trainingExpiry: e.target.value })} /></Field>
             <Field label="Monthly Salary (₹)"><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: Number(e.target.value) })} /></Field>
             <Field label="Emergency Contact"><Input value={form.emergency} onChange={(e) => setForm({ ...form, emergency: e.target.value })} /></Field>
             <Field label="Assigned Vehicle"><Select value={form.vehicleId} onChange={(e) => setForm({ ...form, vehicleId: e.target.value })}><option value="">Unassigned</option>{db.vehicles.map((v) => <option key={v.id} value={v.id}>{v.regNo}</option>)}</Select></Field>
             <FileField label="Profile Photo" value={form.photo ? "uploaded" : ""} onChange={(_n, d) => setForm({ ...form, photo: d })} accept="image/*" />
-            <div className="sm:col-span-2 lg:col-span-3 flex justify-end gap-2"><Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button><Button onClick={save}>Save Driver</Button></div>
+            <div className="sm:col-span-2 lg:col-span-3 flex justify-end gap-2"><Button variant="secondary" onClick={closeForm}>Cancel</Button><Button onClick={save}>Save Driver</Button></div>
           </div>
         )}
       </Modal>
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={`Driver — ${detail?.name || ""}`} wide>
-        {detail && <DriverDetail d={detail} />}
+      <Modal open={!!detailD} onClose={() => setDetail(null)} title={`Driver — ${detailD?.name || ""}`} wide>
+        {detailD && <DriverDetail key={detailD.id} d={detailD} tab0={detail?.tab} fresh={detail?.fresh} />}
       </Modal>
     </div>
   );
 }
 
-function DriverDetail({ d }: { d: Driver }) {
-  const { db, set, toast } = useStore();
-  const [tab, setTab] = useState("Profile");
+function DriverDetail({ d, tab0, fresh }: { d: Driver; tab0?: string; fresh?: boolean }) {
+  const { db, set, toast, user } = useStore();
+  const [tab, setTab] = useState(tab0 || "Profile");
+  const [pickV, setPickV] = useState("");
+  const [override, setOverride] = useState(false);
+  const myVeh = (vid: string) => db.vehicles.find((v) => v.id === vid);
+  const lrs = db.lrs.filter((l) => l.driverId === d.id || (!l.driverId && myVeh(l.vehicleId)?.driverId === d.id));
+  const tccs = db.tccs.filter((t) => t.driverId === d.id || (!t.driverId && myVeh(t.vehicleId)?.driverId === d.id));
   const [docForm, setDocForm] = useState<DriverDoc | null>(null);
   const docs = db.driverDocs.filter((x) => x.driverId === d.id);
   const veh = db.vehicles.find((v) => v.id === d.vehicleId);
@@ -152,17 +177,40 @@ function DriverDetail({ d }: { d: Driver }) {
   const trips = db.trips.filter((t) => t.driverId === d.id);
   const history = db.driverHistory.filter((h) => h.driverId === d.id);
 
-  const blankDoc = (): DriverDoc => ({ id: "", driverId: d.id, name: "Aadhaar Card", docNo: "", issueDate: todayISO(), expiryDate: "", fileName: "", fileData: "", remarks: "" });
+  const blankDoc = (type = ""): DriverDoc => ({ id: "", driverId: d.id, name: type,
+    docNo: type === "Aadhaar Card" ? d.aadhaar : type === "Driving Licence" ? d.licenceNo : "", issueDate: type === "Driving Licence" ? d.licenceIssue : todayISO(),
+    expiryDate: type === "Driving Licence" ? d.licenceExpiry : "", fileName: "", fileData: "", remarks: "" });
   const saveDoc = () => {
     if (!docForm) return;
-    set((x) => { x.driverDocs.push({ ...docForm, id: docForm.id || uid() }); x.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Driver document uploaded", detail: `${d.name} — ${docForm.name}` }); });
-    toast("Driver document saved securely");
+    const name = docForm.name.trim();
+    if (!name) return toast("Type the document name (e.g. Aadhaar Card, Licence)", "error");
+    set((x) => {
+      upsertDoc(x, d.id, name, docForm.docNo, docForm.issueDate, docForm.expiryDate, docForm.fileData ? { name: docForm.fileName, data: docForm.fileData } : null);
+      const dr = x.drivers.find((y) => y.id === d.id);   // keep the driver record in step with its papers
+      if (dr && name === "Aadhaar Card" && docForm.docNo) dr.aadhaar = docForm.docNo;
+      if (dr && name === "Driving Licence") { if (docForm.docNo) dr.licenceNo = docForm.docNo; if (docForm.issueDate) dr.licenceIssue = docForm.issueDate; if (docForm.expiryDate) dr.licenceExpiry = docForm.expiryDate; }
+      x.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Driver document uploaded", detail: `${d.name} — ${docForm.name}` }); });
+    toast("Driver document saved");
     setDocForm(null);
   };
 
   return (
     <div>
-      <Tabs tabs={["Profile", "Documents", "Status History", "Trips", "Salary"]} active={tab} onChange={setTab} />
+      {(() => {
+        const has = (n: string) => docs.find((x) => x.name === n);
+        const aad = has("Aadhaar Card"), lic = has("Driving Licence");
+        const items: [boolean, string, string][] = [
+          [!!(aad?.docNo && aad?.fileData), "Aadhaar (no. + photo)", "Documents"], [!!(lic?.docNo && lic?.fileData), "Licence (no. + photo)", "Documents"],
+          [!!veh, veh ? `Vehicle: ${veh.regNo}` : "Assign a vehicle", "Vehicle"], [!!d.trackToken, "Location link sent", "Tracking"]];
+        if (!fresh && items.every((i) => i[0])) return null;
+        return (
+          <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-xs">
+            <p className="font-semibold text-green-900 mb-1.5">{fresh ? `${d.name} added — finish setting up:` : "Setup checklist"}</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5">{items.map(([ok, label, t]) => (
+              <button key={label} onClick={() => setTab(t)} className={`flex items-center gap-1 ${ok ? "text-green-800" : "text-amber-700 font-semibold"}`}>{ok ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />} {label}</button>))}</div>
+          </div>);
+      })()}
+      <Tabs tabs={["Profile", "Documents", "Vehicle", "LR & TCC", "Tracking", "Trips", "Salary", "Status History"]} active={tab} onChange={setTab} />
       {tab === "Profile" && (
         <div className="grid sm:grid-cols-2 gap-3">
           <Card className="p-3"><h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Personal</h4>
@@ -176,7 +224,11 @@ function DriverDetail({ d }: { d: Driver }) {
       )}
       {tab === "Documents" && (
         <div>
-          <div className="flex justify-between mb-2"><p className="text-xs text-gray-500">Private documents — access restricted to Admin roles.</p><Button size="sm" onClick={() => setDocForm(blankDoc())}><Upload className="w-3.5 h-3.5" /> Upload</Button></div>
+          <div className="flex justify-between mb-2"><p className="text-xs text-gray-500">Number + photo + expiry for each paper. Private — Admin roles only.</p><Button size="sm" onClick={() => setDocForm(blankDoc())}><Plus className="w-3.5 h-3.5" /> Add document</Button></div>
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {DRIVER_DOC_TYPES.filter((t) => t !== "Other" && !docs.some((x) => x.name === t)).map((t) => <button key={t} onClick={() => setDocForm(blankDoc(t))} className="text-xs rounded-full border border-green-300 text-green-800 px-2.5 py-1 hover:bg-green-50">+ {t}</button>)}
+            <button onClick={() => setDocForm(blankDoc(""))} className="text-xs rounded-full border border-dashed border-gray-400 text-gray-600 px-2.5 py-1 hover:bg-gray-50">+ Other…</button>
+          </div>
           <Table headers={["Document", "Number", "Issue", "Expiry", "Validity", "File"]} empty={docs.length === 0}>
             {docs.map((x) => { const i = expiryInfo(x.expiryDate); return (
               <tr key={x.id}><td className="px-3 py-2 text-xs font-semibold">{x.name}</td><td className="px-3 py-2 text-xs">{x.docNo || "—"}</td><td className="px-3 py-2 text-xs">{fmtDate(x.issueDate)}</td><td className="px-3 py-2 text-xs">{fmtDate(x.expiryDate)}</td><td className="px-3 py-2"><Badge cls={i.cls}>{x.expiryDate ? i.label : "No expiry"}</Badge></td><td className="px-3 py-2 text-xs">{x.fileData ? <a className="text-green-700 underline" href={x.fileData} target="_blank" rel="noreferrer">View</a> : "—"}</td></tr>
@@ -185,16 +237,55 @@ function DriverDetail({ d }: { d: Driver }) {
           <Modal open={!!docForm} onClose={() => setDocForm(null)} title="Driver Document">
             {docForm && (
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Document"><Select value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}>{DRIVER_DOC_TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
-                <Field label="Document Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
+                <Field label="Document name" required><Input list="ddoc-types" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} placeholder="Aadhaar Card, Driving Licence, …" /><datalist id="ddoc-types">{DRIVER_DOC_TYPES.filter((t) => t !== "Other").map((t) => <option key={t} value={t} />)}</datalist></Field>
+                <Field label="Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
                 <Field label="Issue Date"><Input type="date" value={docForm.issueDate} onChange={(e) => setDocForm({ ...docForm, issueDate: e.target.value })} /></Field>
                 <Field label="Expiry Date"><Input type="date" value={docForm.expiryDate} onChange={(e) => setDocForm({ ...docForm, expiryDate: e.target.value })} /></Field>
-                <div className="sm:col-span-2"><FileField label="Upload document" value={docForm.fileName} onChange={(n, data) => setDocForm({ ...docForm, fileName: n, fileData: data })} /></div>
+                <div className="sm:col-span-2"><FileField label="Photo / PDF" value={docForm.fileName} onChange={(n, data) => setDocForm({ ...docForm, fileName: n, fileData: data })} /></div>
                 <div className="sm:col-span-2 flex justify-end gap-2"><Button variant="secondary" onClick={() => setDocForm(null)}>Cancel</Button><Button onClick={saveDoc}>Save</Button></div>
               </div>
             )}
           </Modal>
         </div>
+      )}
+      {tab === "Vehicle" && (
+        <div className="space-y-3">
+          <Card className="p-3">
+            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Current vehicle</h4>
+            {veh ? <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-green-700" /> {veh.regNo} <span className="text-xs font-normal text-gray-500">{veh.type} · {veh.capacity}</span></p>
+              <Button size="sm" variant="secondary" onClick={() => { releaseDriver(set, veh.id, user?.name || "Admin"); toast("Vehicle released"); }}>Release vehicle</Button></div> : <p className="text-sm text-gray-500">No vehicle assigned.</p>}
+          </Card>
+          <Card className="p-3">
+            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">{veh ? "Change vehicle" : "Assign a vehicle"}</h4>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={pickV} onChange={(e) => setPickV(e.target.value)}>
+                <option value="">Select vehicle…</option>
+                {db.vehicles.filter((v) => v.status !== "Inactive" && v.id !== d.vehicleId).map((v) => <option key={v.id} value={v.id}>{v.regNo} · {v.type}{v.driverId ? ` (driver: ${db.drivers.find((x) => x.id === v.driverId)?.name || "—"})` : " — free"}{v.status === "Under Maintenance" ? " · maintenance" : ""}</option>)}
+              </Select>
+              <Button onClick={() => { if (!pickV) return toast("Select a vehicle first", "error"); const err = assignDriver(set, db, { driverId: d.id, vehicleId: pickV, override, who: user?.name || "Admin" }); if (err) return toast(err, "error"); toast("Vehicle assigned"); setPickV(""); setOverride(false); }}>Assign</Button>
+            </div>
+            <label className="mt-2 flex items-center gap-2 text-xs text-gray-600"><input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} /> Admin override</label>
+          </Card>
+        </div>
+      )}
+      {tab === "LR & TCC" && (
+        <div className="space-y-4">
+          <div><p className="text-xs font-bold uppercase text-gray-500 mb-2">Lorry receipts ({lrs.length})</p>
+            <Table headers={["LR No", "Date", "Vehicle", "Consignor → Consignee", "Goods", "Status"]} empty={lrs.length === 0}>
+              {lrs.map((l) => <tr key={l.id}><td className="px-3 py-2 text-xs font-semibold">{l.lrNo}</td><td className="px-3 py-2 text-xs">{fmtDate(l.date)}</td><td className="px-3 py-2 text-xs">{myVeh(l.vehicleId)?.regNo}</td><td className="px-3 py-2 text-xs">{l.consignor} → {l.consignee}</td><td className="px-3 py-2 text-xs">{l.goods}</td><td className="px-3 py-2 text-xs">{l.status}</td></tr>)}
+            </Table></div>
+          <div><p className="text-xs font-bold uppercase text-gray-500 mb-2">Cleaning certificates ({tccs.length})</p>
+            <Table headers={["TCC No", "Date", "Vehicle", "To", "Previous cargo"]} empty={tccs.length === 0}>
+              {tccs.map((t) => <tr key={t.id}><td className="px-3 py-2 text-xs font-semibold">{t.tccNo}</td><td className="px-3 py-2 text-xs">{fmtDate(t.date)}</td><td className="px-3 py-2 text-xs">{myVeh(t.vehicleId)?.regNo}</td><td className="px-3 py-2 text-xs">{t.recipient}</td><td className="px-3 py-2 text-xs">{t.prevCargo}</td></tr>)}
+            </Table></div>
+        </div>
+      )}
+      {tab === "Tracking" && (
+        <Card className="p-4 space-y-3">
+          <p className="text-sm">Send {d.name.split(" ")[0]} a private link on WhatsApp. When they open it and tap <b>Allow</b>, their phone shares its location with you. Nothing is collected before that, and they can stop any time.</p>
+          <TrackActions driver={d} />
+          <p className="text-xs text-gray-500">The driver does not need a login. Sharing works while the link page stays open on their phone.</p>
+        </Card>
       )}
       {tab === "Status History" && (
         <div>

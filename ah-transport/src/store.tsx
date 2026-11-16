@@ -1,12 +1,20 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { DB, User, Role } from "./types";
 import { seedDB } from "./seed";
+import { probeSchema } from "./lib/sync";
 import { uid, DEFAULT_FIRM, FIRMS, firmById, type Firm } from "./company";
 import { DATA_MODE, supabase } from "./lib/supabase";
 import { emptyDB, fetchProfile, pullAll, pushChanges, clearFileCache, type Patch, type SeqPatch } from "./lib/sync";
 
 const KEY = "ah_tms_db_v1";
 const SESSION = "ah_tms_session_v1";
+/** Turns a raw database error into something the owner can act on. */
+function friendly(m: string, role?: string): string {
+  if (/row-level security/i.test(m)) return `you are not allowed to do this with the "${role || "current"}" role. Ask the owner to make your account Super Admin or Admin (Supabase → table profiles → role).`;
+  if (/(column|relation|function).*does not exist|schema cache/i.test(m)) return `the database is missing an upgrade — run the newest SQL files from supabase/migrations (see the yellow banner). (${m})`;
+  if (/duplicate key/i.test(m)) return "that record already exists (duplicate number).";
+  return m;
+}
 const FIRM_KEY = "ah_tms_firm_v1";
 const COLL_KEYS = ["vehicles", "vehicleDocs", "maintenance", "drivers", "assignments", "customers", "trips", "lrs", "tccs", "salaries", "expenses", "driverDocs", "driverHistory"] as const;
 const inFirm = (r: { firm?: string }, f: string) => (r.firm || DEFAULT_FIRM) === f;
@@ -60,6 +68,8 @@ interface Ctx {
   toasts: { id: string; msg: string; type: string }[];
   reset: () => void;
   firm: Firm;
+  issues: string[];
+  reload: () => Promise<void>;
   firms: Firm[];
   switchFirm: (id: string) => void;
 }
@@ -72,6 +82,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const dbRef = useRef<DB>(full);
   const [firmId, setFirmId] = useState<string>(() => { try { return firmById(localStorage.getItem(FIRM_KEY) || DEFAULT_FIRM).id; } catch { return DEFAULT_FIRM; } });
   const firmRef = useRef(firmId);
+  const [issues, setIssues] = useState<string[]>([]);
   const db = useMemo(() => viewOf(full, firmId), [full, firmId]);
   const switchFirm = (id: string) => { const f = firmById(id).id; firmRef.current = f; setFirmId(f); try { localStorage.setItem(FIRM_KEY, f); } catch { /* ignore */ } };
   // a driver account only ever sees its own firm
@@ -103,6 +114,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const profile = await fetchProfile(userId);
     if (!profile || !profile.active) { await supabase!.auth.signOut(); return "This account is inactive or not set up. Contact the administrator."; }
     userRef.current = profile; setUser(profile);
+    setIssues(await probeSchema().catch(() => []));
     replaceDb(await pullAll());
     alignFirm(profile);
     return null;
@@ -136,7 +148,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       try { applyPatches(await pushChanges(prev, next, userRef.current?.id)); }
       catch (e) {
         console.error(e);
-        toast(`Could not save: ${(e as Error).message}`, "error");
+        toast(`Could not save: ${friendly((e as Error).message, userRef.current?.role)}`, "error");
         try { replaceDb(await pullAll()); } catch { /* keep screen as is */ }
       }
     });
@@ -180,7 +192,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(KEY); replaceDb(seedDB()); toast("Demo data reset");
   };
 
-  const value = useMemo(() => ({ db, user, booting, login, logout, set, can, toast, toasts, reset, firm: firmById(firmId), firms: FIRMS, switchFirm }), [db, user, booting, toasts, firmId]);
+  const reload = async () => { if (!CLOUD) { replaceDb(load()); return; } await queue.current; replaceDb(await pullAll()); };
+  const value = useMemo(() => ({ issues, reload, db, user, booting, login, logout, set, can, toast, toasts, reset, firm: firmById(firmId), firms: FIRMS, switchFirm }), [db, user, booting, toasts, firmId, issues]);
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
 }
 
