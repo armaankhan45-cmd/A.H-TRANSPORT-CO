@@ -31,6 +31,7 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       <H x={885} y={362} w={195} t={1.5} />
       <V x={893} y={330} size={32}>{fmtDMY(tcc.date)}</V>
       <T x={182} y={350} size={25.5}>To,</T>
+      <V x={182} y={392} w={480} size={34} style={{ whiteSpace: "pre-line", lineHeight: "56px" }}>{tcc.recipient}{"\n"}{tcc.recipientAddr}</V>
       <V x={182} y={392} w={480} size={34} style={{ whiteSpace: "normal", lineHeight: "66px" }}>{tcc.recipient}<br />{tcc.recipientAddr}</V>
       <H x={182} y={570} w={470} t={1.5} />
 
@@ -46,6 +47,7 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       <V x={404} y={755} w={630} size={34}>{tcc.onBehalf}</V>
       {text(824, "We hereby certify that the previous cargo loaded in the above vehicle was")}
       <H x={188} y={888} w={872} t={1.5} />
+      <V x={188} y={852} w={872} size={40} align="center">{tcc.prevCargo}</V>
       <V x={188} y={850} w={872} size={40} align="center">{tcc.prevCargo}</V>
       {text(924, "Each compartment of the vehicle has been cleaned properly as per", 187)}
       {text(977, "requirement and it is fit for carrying above product.", 187)}

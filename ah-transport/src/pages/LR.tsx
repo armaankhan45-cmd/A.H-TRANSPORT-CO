@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, Tabs, Confirm, Empty } from "../ui";
-import { Plus, Printer, Download, Share2, Eye, Pencil, FileText, CheckCircle2, MessageCircle, Mail } from "lucide-react";
+import { Plus, Printer, Download, Share2, Eye, Pencil, Trash2, FileText, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, fmtINR, todayISO, uid, nextSeq } from "../company";
 import { downloadLR, printCanvas } from "../pdf";
 import LRPreview, { LR_H, LR_W } from "../components/LRPreview";
@@ -91,6 +91,7 @@ export default function LRPage() {
                 <div className="flex gap-1">
                   <button title="View / print" onClick={() => setPreview(l)} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button title="Edit" onClick={() => setForm({ ...l })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
+                  <button title="Delete" onClick={() => setDel(l)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
                   <button title="Download PDF" onClick={() => { void downloadLR(l, vehicle(l.vehicleId), driver(l.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
@@ -160,7 +161,7 @@ export default function LRPage() {
           </div>
         )}
       </Modal>
-      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={() => setDel(null)} message="Cancel this LR?" />
+      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={() => { if (del) { set((d) => { d.lrs = d.lrs.filter((x) => x.id !== del.id); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "LR deleted", detail: del.lrNo }); }); toast(`LR ${del.lrNo} deleted`); } setDel(null); }} message={`Delete LR ${del?.lrNo}? This cannot be undone.`} />
     </div>
   );
 }

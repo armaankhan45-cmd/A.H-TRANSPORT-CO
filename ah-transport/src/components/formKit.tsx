@@ -1,7 +1,11 @@
+import "@fontsource/caveat/500.css";
+import "@fontsource/caveat/700.css";
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 /** Forms are laid out in the pixel space of the original scans and scaled to fit, so screen, print and PDF all match. */
 export const INK = "#0b2a8a";
+export const HAND = "'Caveat','Reenie Beanie',cursive";
+export const SERIF = "'Bookman Old Style','Rockwell',Georgia,'Times New Roman',serif";
 export const SERIF = "'AH Bookman','Bookman Old Style',Georgia,'Times New Roman',serif";
 
 export const at = (x: number, y: number, w?: number, h?: number, extra: CSSProperties = {}): CSSProperties => ({
@@ -15,7 +19,7 @@ export function T({ x, y, w, size = 24, bold, italic, align, ls, lh, children, s
 }
 /** Filled-in value (ink colour). */
 export function V({ x, y, w, size = 32, align, bold = true, children, style }: { x: number; y: number; w?: number; size?: number; align?: "left" | "center" | "right"; bold?: boolean; children: ReactNode; style?: CSSProperties }) {
-  return <div style={at(x, y, w, undefined, { color: INK, fontSize: size, fontWeight: bold ? 700 : 500, textAlign: align, lineHeight: 1.15, whiteSpace: "nowrap", ...style })}>{children}</div>;
+  return <div style={at(x, y, w, undefined, { color: INK, fontFamily: HAND, fontSize: size * 1.2, marginTop: -size * 0.1, fontWeight: bold ? 700 : 500, textAlign: align, lineHeight: 1.15, whiteSpace: "nowrap", ...style })}>{children}</div>;
 }
 export const H = ({ x, y, w, t = 2 }: { x: number; y: number; w: number; t?: number }) => <div style={at(x, y, w, 0, { borderTop: `${t}px solid #000` })} />;
 export const Vl = ({ x, y, h, t = 2 }: { x: number; y: number; h: number; t?: number }) => <div style={at(x, y, 0, h, { borderLeft: `${t}px solid #000` })} />;

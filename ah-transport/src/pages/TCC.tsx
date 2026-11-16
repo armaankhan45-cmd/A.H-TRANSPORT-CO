@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Select, Textarea, Modal } from "../ui";
-import { Plus, Printer, Download, Eye, Pencil, CheckCircle2, MessageCircle, Mail } from "lucide-react";
+import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Select, Textarea, Modal, Confirm } from "../ui";
+import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, todayISO, uid, nextSeq } from "../company";
 import { downloadTCC, printCanvas } from "../pdf";
 import TCCPreview, { TCC_H, TCC_W } from "../components/TCCPreview";
@@ -14,6 +14,7 @@ export default function TCCPage() {
   const [q, setQ] = useState("");
   const [form, setForm] = useState<TCC | null>(null);
   const [preview, setPreview] = useState<TCC | null>(null);
+  const [del, setDel] = useState<TCC | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   const list = db.tccs.filter((t) => !q || [t.tccNo, t.recipient, t.prevCargo, t.date].join(" ").toLowerCase().includes(q.toLowerCase())).sort((a, b) => b.tccNo.localeCompare(a.tccNo));
@@ -61,6 +62,7 @@ export default function TCCPage() {
                 <div className="flex gap-1">
                   <button onClick={() => setPreview(t)} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button onClick={() => setForm({ ...t })} className="p-1.5 rounded hover:bg-gray-100" title="Edit"><Pencil className="w-4 h-4 text-blue-600" /></button>
+                  <button onClick={() => setDel(t)} className="p-1.5 rounded hover:bg-gray-100" title="Delete"><Trash2 className="w-4 h-4 text-red-600" /></button>
                   <button onClick={() => { void downloadTCC(t, vehicle(t.vehicleId), driver(t.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100" title="Download PDF"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
@@ -69,6 +71,7 @@ export default function TCCPage() {
         </Table>
       </Card>
 
+      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={() => { if (del) { set((d) => { d.tccs = d.tccs.filter((x) => x.id !== del.id); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "TCC deleted", detail: del.tccNo }); }); toast(`TCC ${del.tccNo} deleted`); } setDel(null); }} message={`Delete TCC ${del?.tccNo}? This cannot be undone.`} />
       <Modal open={!!form} onClose={() => setForm(null)} title={`TCC ${form?.tccNo || ""}`} wide>
         {form && (
           <div className="grid sm:grid-cols-2 gap-3">

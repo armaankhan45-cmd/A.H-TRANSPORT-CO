@@ -128,13 +128,13 @@ export default function Vehicles() {
       <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={remove} message={`Deactivate vehicle ${del?.regNo}? Records are retained — the vehicle is marked Inactive, never permanently deleted.`} />
 
       <Modal open={!!detailV} onClose={() => setDetail(null)} title={`Vehicle ${detailV?.regNo || ""}`} wide>
-        {detailV && <VehicleDetail key={detailV.id} v={detailV} tab0={detail?.tab} fresh={detail?.fresh} />}
+        {detailV && <VehicleDetail key={detailV.id} v={detailV} onEdit={() => setForm({ ...detailV })} tab0={detail?.tab} fresh={detail?.fresh} />}
       </Modal>
     </div>
   );
 }
 
-function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: boolean }) {
+function VehicleDetail({ v, tab0, fresh, onEdit }: { v: Vehicle; tab0?: string; fresh?: boolean; onEdit: () => void }) {
   const { db, set, toast, user } = useStore();
   const [tab, setTab] = useState(tab0 || "Details");
   const [pick, setPick] = useState("");
@@ -142,6 +142,7 @@ function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: 
   const lrs = db.lrs.filter((l) => l.vehicleId === v.id);
   const tccs = db.tccs.filter((t) => t.vehicleId === v.id);
   const [docForm, setDocForm] = useState<VehicleDoc | null>(null);
+  const [docDel, setDocDel] = useState<VehicleDoc | null>(null);
   const driver = db.drivers.find((d) => d.id === v.driverId);
   const docs = db.vehicleDocs.filter((d) => d.vehicleId === v.id);
   const current = docs.filter((d) => d.status !== "Superseded");
@@ -158,6 +159,7 @@ function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: 
     const name = docForm.name.trim();
     if (!name) return toast("Type the paper name (e.g. Insurance, Fitness, Calibration)", "error");
     if (!docForm.expiryDate) return toast("Expiry date is required", "error");
+    if (docForm.issueDate && docForm.expiryDate < docForm.issueDate) return toast("Expiry date must be on or after the issue date — fix the dates", "error");
     docForm.name = name;
     set((d) => {
       if (docForm.id) {
@@ -177,6 +179,7 @@ function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: 
 
   return (
     <div>
+      <Confirm open={!!docDel} onCancel={() => setDocDel(null)} onConfirm={() => { if (docDel) { set((d) => { d.vehicleDocs = d.vehicleDocs.filter((x) => x.id !== docDel.id); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Document deleted", detail: `${v.regNo} — ${docDel.name}` }); }); toast("Paper deleted"); } setDocDel(null); }} message={`Delete paper "${docDel?.name}" of ${v.regNo}?`} />
       {(fresh || !driver || current.length === 0) && (
         <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-xs">
           <p className="font-semibold text-green-900 mb-1.5">{fresh ? `${v.regNo} added — finish setting it up:` : "Setup checklist"}</p>
@@ -191,7 +194,7 @@ function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: 
       {tab === "Details" && (
         <div className="grid sm:grid-cols-2 gap-4">
           <Card className="p-3">
-            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Vehicle</h4>
+            <div className="flex items-center justify-between mb-2"><h4 className="text-xs font-bold uppercase text-gray-500">Vehicle</h4><Button size="sm" variant="secondary" onClick={onEdit}><Pencil className="w-3.5 h-3.5" /> Edit vehicle</Button></div>
             <KV k="Registration" v={v.regNo} /><KV k="Type" v={v.type} /><KV k="Capacity" v={v.capacity} /><KV k="Manufacturer / Model" v={`${v.manufacturer} ${v.model}`} />
             <KV k="Chassis" v={v.chassis} /><KV k="Engine" v={v.engine} /><KV k="Mfg Year / Fuel" v={`${v.mfgYear} · ${v.fuel}`} /><KV k="Purchase Date" v={fmtDate(v.purchaseDate)} />
           </Card>
@@ -238,8 +241,9 @@ function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: 
                   <td className="px-3 py-2"><Badge cls={i.cls}>{i.label}</Badge></td>
                   <td className="px-3 py-2 text-xs">{d.fileData ? <a href={d.fileData} target="_blank" rel="noreferrer" className="text-green-700 underline">View</a> : <span className="text-gray-400">{d.fileName || "—"}</span>}</td>
                   <td className="px-3 py-2">
-                    <button onClick={() => setDocForm({ ...newDoc(d.name), id: d.id, docNo: d.docNo, issueDate: d.issueDate, expiryDate: d.expiryDate, remarks: d.remarks, fileName: d.fileName, fileData: d.fileData })} className="text-xs text-blue-700 hover:underline mr-2">Edit</button>
-                    <button onClick={() => setDocForm({ ...newDoc(d.name), renewedFrom: d.id, docNo: d.docNo })} className="text-xs text-green-700 hover:underline">Renew</button>
+                    <button onClick={() => setDocForm({ ...newDoc(d.name), id: d.id, docNo: d.docNo, issueDate: d.issueDate, expiryDate: d.expiryDate, remarks: d.remarks, fileName: d.fileName, fileData: d.fileData })} className="text-xs rounded border border-blue-200 text-blue-700 px-2 py-0.5 hover:bg-blue-50 mr-1.5 inline-flex items-center gap-1"><Pencil className="w-3 h-3" />Edit</button>
+                    <button onClick={() => setDocForm({ ...newDoc(d.name), renewedFrom: d.id, docNo: d.docNo })} className="text-xs rounded border border-green-200 text-green-700 px-2 py-0.5 hover:bg-green-50 mr-1.5">Renew</button>
+                    <button onClick={() => setDocDel(d)} className="text-xs rounded border border-red-200 text-red-600 px-2 py-0.5 hover:bg-red-50 inline-flex items-center gap-1"><Trash2 className="w-3 h-3" />Delete</button>
                   </td>
                 </tr>
               );
