@@ -6,7 +6,7 @@ import { COMPANY, daysLeft, expiryInfo, fmtDate, fmtINR, netSalary, todayISO, ui
 import { downloadLR, downloadTCC } from "../pdf";
 
 export default function DriverPortal() {
-  const { db, user, set, toast } = useStore();
+  const { db, user, set, toast, firm } = useStore();
   const [tab, setTab] = useState("Overview");
   const [locModal, setLocModal] = useState(false);
   const [docModal, setDocModal] = useState(false);
@@ -122,7 +122,7 @@ export default function DriverPortal() {
             {myLRs.map((l) => (
               <div key={l.id} className="flex items-center justify-between border-b border-gray-100 py-1.5 text-xs">
                 <span><b>{l.lrNo}</b> · {fmtDate(l.date)}<span className="block text-[10px] text-gray-500">{l.from} → {l.to}</span></span>
-                <button className="text-green-700 hover:underline" onClick={() => { const d = db.drivers.find((x) => x.id === l.driverId); downloadLR(l, vehicle, d); }}>PDF</button>
+                <button className="text-green-700 hover:underline" onClick={() => { const d = db.drivers.find((x) => x.id === l.driverId); void downloadLR(l, vehicle, d, firm); }}>PDF</button>
               </div>
             ))}
           </Card>
@@ -132,7 +132,7 @@ export default function DriverPortal() {
             {myTCCs.map((t) => (
               <div key={t.id} className="flex items-center justify-between border-b border-gray-100 py-1.5 text-xs">
                 <span><b>{t.tccNo}</b> · {fmtDate(t.date)}<span className="block text-[10px] text-gray-500">{t.prevCargo}</span></span>
-                <button className="text-green-700 hover:underline" onClick={() => downloadTCC(t, vehicle, driver)}>PDF</button>
+                <button className="text-green-700 hover:underline" onClick={() => downloadTCC(t, vehicle, driver, firm)}>PDF</button>
               </div>
             ))}
           </Card>

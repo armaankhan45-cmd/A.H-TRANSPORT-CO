@@ -28,51 +28,28 @@ export default function Drivers() {
     if (!form.name.trim()) return toast("Driver name is required", "error");
     if (!/^\d{10}$/.test(form.mobile.replace(/\s/g, ""))) return toast("Enter a valid 10-digit mobile number", "error");
     if (form.licenceExpiry && form.licenceExpiry < todayISO()) toast("Warning: licence already expired", "error");
-    if (form.status !== "Active" && form.status !== "Rejoined" && form.vehicleId) return toast("Inactive/resigned drivers cannot be assigned to a vehicle.", "error");
-    const occupied = db.drivers.find((x) => x.id !== form.id && x.status === "Active" && x.vehicleId === form.vehicleId && !!form.vehicleId);
-    if (occupied) return toast(`${form.vehicleId ? db.vehicles.find((v) => v.id === form.vehicleId)?.regNo : "Vehicle"} is assigned to ${occupied.name}. Manage the change in Assignments.`, "error");
-    const isNew = !form.id;
-    const saved = { ...form, id: form.id || uid() };
     set((d) => {
-      const previous = d.drivers.find((x) => x.id === saved.id);
-      const oldStatus = previous?.status;
-      const oldVehicleId = previous?.vehicleId || "";
-      if (previous) Object.assign(previous, saved); else d.drivers.push(saved);
-      if (oldVehicleId && oldVehicleId !== saved.vehicleId) {
-        d.assignments.filter((a) => a.driverId === saved.id && a.vehicleId === oldVehicleId && !a.endDate).forEach((a) => { a.endDate = todayISO(); a.remarks = `${a.remarks} · Changed from driver record`.trim(); });
-        const oldVehicle = d.vehicles.find((v) => v.id === oldVehicleId); if (oldVehicle?.driverId === saved.id) oldVehicle.driverId = "";
+      if (form.id) {
+        const i = d.drivers.findIndex((x) => x.id === form.id);
+        const old = i >= 0 ? d.drivers[i] : null;
+        if (i >= 0) d.drivers[i] = form;
+        if (old && old.status !== form.status) d.driverHistory.unshift({ id: uid(), driverId: form.id, date: todayISO(), status: form.status, note: `Status changed ${old.status} → ${form.status}` });
+        d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver updated", detail: form.name });
+      } else {
+        const id = uid();
+        d.drivers.push({ ...form, id });
+        d.driverHistory.unshift({ id: uid(), driverId: id, date: form.joining || todayISO(), status: "Active", note: "Joined company" });
+        d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver added", detail: form.name });
       }
-      if (saved.vehicleId) {
-        const vehicle = d.vehicles.find((v) => v.id === saved.vehicleId);
-        if (vehicle) vehicle.driverId = saved.id;
-        if (!d.assignments.some((a) => a.driverId === saved.id && a.vehicleId === saved.vehicleId && !a.endDate))
-          d.assignments.unshift({ id: uid(), driverId: saved.id, vehicleId: saved.vehicleId, startDate: todayISO(), endDate: "", remarks: "Assigned from driver record" });
-      }
-      if (saved.status === "Inactive" || saved.status === "Resigned") {
-        d.assignments.filter((a) => a.driverId === saved.id && !a.endDate).forEach((a) => { a.endDate = todayISO(); });
-        const vehicle = d.vehicles.find((v) => v.driverId === saved.id); if (vehicle) vehicle.driverId = "";
-        const driver = d.drivers.find((x) => x.id === saved.id); if (driver) driver.vehicleId = "";
-      }
-      if (oldStatus && oldStatus !== saved.status) d.driverHistory.unshift({ id: uid(), driverId: saved.id, date: todayISO(), status: saved.status, note: `Status changed ${oldStatus} → ${saved.status}` });
-      if (isNew) d.driverHistory.unshift({ id: uid(), driverId: saved.id, date: saved.joining || todayISO(), status: "Active", note: "Joined company" });
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: isNew ? "Driver added" : "Driver updated", detail: saved.name });
     });
-    toast(isNew ? "Driver added and linked to the selected vehicle." : "Driver saved");
+    toast("Driver saved");
     setForm(null);
   };
 
   const setStatus = (d0: Driver, status: string) => {
     set((d) => {
       const dr = d.drivers.find((x) => x.id === d0.id);
-      if (dr) {
-        const previousVehicleId = dr.vehicleId;
-        dr.status = status;
-        if (status === "Resigned" || status === "Inactive") {
-          dr.vehicleId = "";
-          const vehicle = d.vehicles.find((v) => v.id === previousVehicleId);
-          if (vehicle?.driverId === d0.id) vehicle.driverId = "";
-        }
-      }
+      if (dr) { dr.status = status; if (status === "Resigned" || status === "Inactive") dr.vehicleId = ""; }
       d.driverHistory.unshift({ id: uid(), driverId: d0.id, date: todayISO(), status, note: `Marked ${status}` });
       d.assignments.filter((a) => a.driverId === d0.id && !a.endDate).forEach((a) => { a.endDate = todayISO(); });
       d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver status changed", detail: `${d0.name} → ${status}` });
@@ -208,7 +185,7 @@ function DriverDetail({ d }: { d: Driver }) {
           <Modal open={!!docForm} onClose={() => setDocForm(null)} title="Driver Document">
             {docForm && (
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Document Name" hint="Choose a common ID or type another"><Input list="driver-doc-types" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} /><datalist id="driver-doc-types">{DRIVER_DOC_TYPES.map((t) => <option key={t} value={t} />)}</datalist></Field>
+                <Field label="Document"><Select value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}>{DRIVER_DOC_TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
                 <Field label="Document Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
                 <Field label="Issue Date"><Input type="date" value={docForm.issueDate} onChange={(e) => setDocForm({ ...docForm, issueDate: e.target.value })} /></Field>
                 <Field label="Expiry Date"><Input type="date" value={docForm.expiryDate} onChange={(e) => setDocForm({ ...docForm, expiryDate: e.target.value })} /></Field>

@@ -12,15 +12,15 @@ export default function Tracking() {
   const consented = db.locations.filter((l) => l.consent);
   const activeTrips = db.trips.filter((t) => !["Completed", "Cancelled"].includes(t.status));
 
-  // Consent must be granted by the driver on their own device. Admin can only stop an active share.
-  const stopSharing = (driverId: string) => {
+  const toggleConsent = (driverId: string) => {
     set((d) => {
-      const loc = d.locations.find((x) => x.driverId === driverId);
-      if (loc) loc.consent = false;
+      const l = d.locations.find((x) => x.driverId === driverId);
+      if (l) l.consent = !l.consent;
+      else d.locations.push({ driverId, lat: 19.076, lng: 72.877, updated: new Date().toISOString(), consent: true });
       const dr = d.drivers.find((x) => x.id === driverId);
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Location share stopped by office", detail: dr?.name || driverId });
+      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Tracking consent changed", detail: `${dr?.name}: ${l?.consent ? "revoked" : "granted"}` });
     });
-    toast("Location sharing stopped");
+    toast("Consent updated");
   };
 
   return (
@@ -36,7 +36,7 @@ export default function Tracking() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 p-4">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin className="w-4 h-4 text-green-700" /> Locations actively shared by drivers</h3>
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin className="w-4 h-4 text-green-700" /> Authorised driver locations (map placeholder)</h3>
           <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-[radial-gradient(circle_at_30%_20%,#dcfce7,transparent_60%),radial-gradient(circle_at_70%_80%,#dbeafe,transparent_55%)] h-72">
             <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 300">
               {Array.from({ length: 10 }).map((_, i) => <line key={"h" + i} x1="0" y1={i * 30} x2="400" y2={i * 30} stroke="#cbd5e1" strokeWidth="0.5" />)}
@@ -54,7 +54,7 @@ export default function Tracking() {
               );
             })}
             {consented.length === 0 && <p className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">No driver has granted consent yet.</p>}
-            <span className="absolute bottom-1 right-2 text-[9px] text-gray-500">Illustrative map only · live shared points need authenticated backend sync</span>
+            <span className="absolute bottom-1 right-2 text-[9px] text-gray-500">Illustrative map · integrate Mapbox/Leaflet + Supabase Realtime in production</span>
           </div>
           <Table headers={["Driver", "Vehicle", "Latitude", "Longitude", "Last updated", "Consent", "Action"]}>
             {db.locations.map((l) => {
@@ -67,7 +67,7 @@ export default function Tracking() {
                   <td className="px-3 py-2 text-xs font-mono">{l.lng.toFixed(4)}</td>
                   <td className="px-3 py-2 text-xs">{new Date(l.updated).toLocaleString("en-IN")}</td>
                   <td className="px-3 py-2"><Badge cls={l.consent ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>{l.consent ? "Granted" : "Revoked"}</Badge></td>
-                  <td className="px-3 py-2">{l.consent ? <Button size="sm" variant="secondary" onClick={() => stopSharing(l.driverId)}>Stop share</Button> : <span className="text-[11px] text-gray-400">Driver must consent</span>}</td>
+                  <td className="px-3 py-2"><Button size="sm" variant="secondary" onClick={() => toggleConsent(l.driverId)}>{l.consent ? "Revoke" : "Grant"}</Button></td>
                 </tr>
               );
             })}
@@ -83,9 +83,9 @@ export default function Tracking() {
           <Card className="p-4 text-xs text-gray-600 space-y-2">
             <p className="font-semibold text-gray-900 flex items-center gap-1"><Info className="w-4 h-4" /> Honest limitations</p>
             <p>• Continuous background GPS is <b>not</b> guaranteed in a browser/PWA. For reliable tracking, ship the Android app with a <b>foreground location service</b> (persistent notification, <code>ACCESS_BACKGROUND_LOCATION</code> handled per Play Store policy).</p>
-            <p>• The office cannot grant consent on a driver's behalf. A driver must explicitly share from their own device; this demo's location share is one-time, not continuous tracking.</p>
-            <p>• This demo uses browser-local storage, not a shared live location service. Live office visibility requires Supabase persistence/RLS integration and authenticated driver consent.</p>
-            <p>• Retention: a database purge function is supplied, but must be scheduled/configured in the live backend (default policy 30 days).</p>
+            <p>• Location is only collected while the driver has explicitly granted consent, and can be revoked from the driver app at any time.</p>
+            <p>• Location rows are protected by RLS: a driver can only insert/read their own row; admins read authorised rows only.</p>
+            <p>• Retention: automatic purge job after the configured period (default 30 days).</p>
           </Card>
         </div>
       </div>

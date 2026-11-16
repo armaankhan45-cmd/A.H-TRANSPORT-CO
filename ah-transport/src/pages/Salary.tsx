@@ -7,7 +7,7 @@ import type { Salary as Sal } from "../types";
 import { downloadReport } from "../pdf";
 
 export default function Salary() {
-  const { db, set, toast } = useStore();
+  const { db, set, toast, firm } = useStore();
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [q, setQ] = useState("");
   const [tab, setTab] = useState("Salary Sheet");
@@ -43,7 +43,7 @@ export default function Salary() {
 
   const exportSalary = () => {
     downloadReport(`Salary Sheet ${month}`, ["Driver", "Month", "Base", "Bonus", "Additions", "Advance", "Deductions", "Net", "Status"],
-      recs.map((s) => [driver(s.driverId)?.name || "—", s.month, String(s.base), String(s.bonus), String(s.additions), String(s.advance), String(s.deductions), String(netSalary(s)), s.status]));
+      recs.map((s) => [driver(s.driverId)?.name || "—", s.month, String(s.base), String(s.bonus), String(s.additions), String(s.advance), String(s.deductions), String(netSalary(s)), s.status]), firm);
     toast("Salary sheet PDF exported");
   };
   const exportExcel = () => {

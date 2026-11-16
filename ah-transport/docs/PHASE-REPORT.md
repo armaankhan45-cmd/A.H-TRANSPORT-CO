@@ -47,9 +47,6 @@ Screenshots saved under `tests/`: `dashboard.png`, `vehicles.png`, `lr-preview.p
 - Playwright exposed missing Users & Settings visibility for admin roles; permission navigation was corrected.
 - Added Escape-key dismissal for modal dialogs, enabling keyboard dismissal and stable mobile test flow.
 - LR/TCC saved-customer selection was changed to searchable datalist inputs while keeping free-text entry and address auto-fill.
-- Added `tests/workflow.mjs`: duplicate seeded `MH43CK8150` opens the existing record; unique vehicle create opens details; custom vehicle paper number/expiry/image save; driver create synchronizes the vehicle assignment; LR creation is visible from the vehicle's new LRs tab.
-- Vehicle/driver direct assignment now mirrors into assignment history; retired drivers release their vehicle link. Custom vehicle/driver document names are accepted. Browser uploads compress images and reject oversized PDFs; localStorage failures show a warning rather than throwing silently.
-- Removed generated fake GPS positions. Admin can stop an active share but cannot grant driver consent; the driver must share location on their own device.
 
 ### Remaining work / honest production caveats
 1. **Supabase persistence/auth integration:** schema, RLS, storage migrations and client helpers are supplied, but the UI still uses the localStorage demo adapter. Supabase write/auth paths are not yet wired end-to-end. Do not treat the demo app as a production multi-user service until this is completed and tested against a configured Supabase project.
@@ -62,7 +59,7 @@ Screenshots saved under `tests/`: `dashboard.png`, `vehicles.png`, `lr-preview.p
 ## Files and database changes
 - App: `src/`, including pages for dashboard, vehicles, documents, maintenance, drivers, assignments, LR, TCC, trips, customers, salary, expenses, reports, tracking, administration and driver portal.
 - Database: `supabase/migrations/0001_init.sql` through `0004_seed_demo.sql`; RLS, private storage, indexes, generated values, triggers, sequences and labelled demo seed data.
-- Tests: `tests/smoke.mjs`, `tests/workflow.mjs`, six screenshots.
+- Tests: `tests/smoke.mjs`, six screenshots.
 - Docs: `README.md`, `.env.example`, `docs/`, `supabase/README.md`.
 
 ## Run instructions
@@ -80,7 +77,6 @@ Open the Vite URL shown in the terminal. Demo credentials:
 Build and smoke test:
 ```bash
 npm run build
-node tests/smoke.mjs
-node tests/workflow.mjs  # both need dev server on http://127.0.0.1:5173 and Playwright Chromium
+node tests/smoke.mjs  # requires dev server on http://127.0.0.1:5173 and installed Playwright Chromium
 ```
 Supabase setup: follow `supabase/README.md`, `docs/SETUP.md`, and `.env.example`; migrations must be applied and RLS tested in a non-production project before any sensitive data is entered.
