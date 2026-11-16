@@ -1,69 +1,68 @@
-import { COMPANY, fmtDate } from "../company";
+import type { Firm } from "../company";
 import type { TCC, Vehicle, Driver } from "../types";
+import logo from "../assets/logo-tcc.png";
+import truck from "../assets/truck-tcc.png";
+import { H, ScaledCanvas, SERIF, T, V, at, fmtDMY } from "./formKit";
 
-export default function TCCPreview({ tcc, vehicle, driver }: { tcc: TCC; vehicle?: Vehicle; driver?: Driver }) {
+export const TCC_W = 1202, TCC_H = 1600;
+
+/** Tanker Cleaning Certificate letter laid out exactly like the printed A.H. Transport Co. stationery. */
+export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; vehicle?: Vehicle; driver?: Driver; firm: Firm }) {
+  const [p1, ...rest] = firm.phones;
+  const text = (y: number, s: string, x = 185) => <T x={x} y={y} size={25.5} ls={0.3}>{s}</T>;
   return (
-    <div className="bg-white text-black mx-auto" style={{ maxWidth: 820, fontFamily: "Georgia, 'Times New Roman', serif" }}>
-      <div className="border-[3px] border-black">
-        <div className="border-b-2 border-black flex items-stretch">
-          <div className="w-24 border-r-2 border-black flex items-center justify-center p-2">
-            <div className="w-16 h-16 rounded-full border-[3px] border-green-900 flex flex-col items-center justify-center leading-none">
-              <span className="text-[18px] font-black text-green-900">AH</span>
-              <span className="text-[6px] font-bold text-green-900 tracking-widest mt-0.5">TRANSPORT</span>
-            </div>
-          </div>
-          <div className="flex-1 text-center py-2 px-2">
-            <h1 className="text-[26px] font-black tracking-wide text-green-900 leading-none">A.H. TRANSPORT CO.</h1>
-            <p className="text-[10px] font-semibold mt-1">Fleet Owners &amp; Transport Contractors — Chemical Oil &amp; Bulk Cargo</p>
-            <p className="text-[9.5px] mt-0.5">{COMPANY.address}</p>
-            <p className="text-[9.5px]">Mob.: {COMPANY.phones.join(" / ")} &nbsp;•&nbsp; {COMPANY.email}</p>
-            <p className="text-[9.5px]">{COMPANY.website} &nbsp;•&nbsp; GSTIN {COMPANY.gstin} &nbsp;•&nbsp; PAN {COMPANY.pan}</p>
-          </div>
-        </div>
-        <div className="border-b-2 border-black bg-green-900 text-white text-center py-1">
-          <span className="text-[13px] font-bold tracking-[2px]">TANKER CLEANING CERTIFICATE</span>
-        </div>
-        <div className="border-b-2 border-black flex justify-between text-[11px] px-2 py-1 font-bold">
-          <span>TCC No. : {tcc.tccNo}</span>
-          <span>Date : {fmtDate(tcc.date)}</span>
-        </div>
-        <div className="p-3 text-[11px] leading-relaxed">
-          <p className="font-bold text-[12px]">TO,</p>
-          <p className="font-bold text-[13px]">{tcc.recipient || "—"}</p>
-          <p className="mb-3">{tcc.recipientAddr || "—"}</p>
+    <ScaledCanvas w={TCC_W} h={TCC_H}>
+      <div style={at(62, 30, 1103, 1537, { border: "2px solid #000" })} />
+      {/* letterhead */}
+      <div style={at(968, 12, 190, 90, { background: "#fff" })} />
+      <T x={972} y={14} size={18} bold lh={19}>Mobile : {p1}</T>
+      <T x={1034} y={33} size={18} bold lh={18.5}>{rest.map((p) => <div key={p}>{p}</div>)}</T>
+      {firm.logo && <img src={logo} alt="" style={at(88, 62, 204, 80)} />}
+      {firm.logo && <img src={truck} alt="" style={at(1036, 100, 114, 54)} />}
+      <T x={290} y={64} w={740} size={79} bold align="center" ls={0.5} style={{ fontFamily: SERIF, fontWeight: 800, color: "#1d3b26" }}>{firm.display}</T>
+      <div style={at(66, 160, 1094, 47, { background: "#262626" })} />
+      <T x={66} y={171} w={1094} size={24.5} bold align="center" style={{ color: "#fff", fontFamily: SERIF }}>{firm.tagline}</T>
+      <T x={66} y={216} w={1094} size={20.8} align="center">Office : {firm.address.replace(/^Office\s*:\s*/, "")}</T>
+      <T x={66} y={242} w={1094} size={20.8} align="center"><b>E-mail :</b> {firm.email} | <b>Website :</b> {firm.website}</T>
+      <H x={66} y={284} w={1094} />
 
-          <p className="mb-3"><b>Subject:</b> Tanker Cleaning Certificate — Vehicle No. <b className="font-mono text-[13px]">{vehicle?.regNo || "—"}</b></p>
+      {/* addressee + date */}
+      <T x={815} y={337} size={24}>Date :</T>
+      <H x={885} y={362} w={195} t={1.5} />
+      <V x={893} y={330} size={32}>{fmtDMY(tcc.date)}</V>
+      <T x={182} y={350} size={25.5}>To,</T>
+      <V x={182} y={392} w={480} size={34} style={{ whiteSpace: "normal", lineHeight: "66px" }}>{tcc.recipient}<br />{tcc.recipientAddr}</V>
+      <H x={182} y={570} w={470} t={1.5} />
 
-          <table className="w-full border-collapse mb-3 text-[11px]">
-            <tbody>
-              <tr><td className="border border-black px-2 py-1 w-[40%] font-bold bg-green-50">Vehicle Number</td><td className="border border-black px-2 py-1 font-mono">{vehicle?.regNo || "—"}</td></tr>
-              <tr><td className="border border-black px-2 py-1 font-bold bg-green-50">Vehicle Type / Capacity</td><td className="border border-black px-2 py-1">{vehicle ? `${vehicle.type} — ${vehicle.capacity}` : "—"}</td></tr>
-              <tr><td className="border border-black px-2 py-1 font-bold bg-green-50">On Behalf of M/s.</td><td className="border border-black px-2 py-1">{tcc.onBehalf || "—"}</td></tr>
-              <tr><td className="border border-black px-2 py-1 font-bold bg-green-50">Previous Cargo</td><td className="border border-black px-2 py-1">{tcc.prevCargo || "—"}</td></tr>
-              <tr><td className="border border-black px-2 py-1 font-bold bg-green-50">Driver Name</td><td className="border border-black px-2 py-1">{driver?.name || "—"} {driver?.mobile ? `(${driver.mobile})` : ""}</td></tr>
-            </tbody>
-          </table>
+      {/* body */}
+      {text(624, "Dear Sir,", 182)}
+      {text(672, "We intend to Transport")}
+      <H x={462} y={697} w={600} t={1.5} />
+      {text(724, "in vehicle No.")}
+      <H x={346} y={737} w={712} t={1.5} />
+      <V x={346} y={700} w={712} size={36} align="center">{vehicle?.regNo}</V>
+      {text(778, "On behalf of M/s.")}
+      <H x={396} y={805} w={640} t={1.5} />
+      <V x={404} y={755} w={630} size={34}>{tcc.onBehalf}</V>
+      {text(824, "We hereby certify that the previous cargo loaded in the above vehicle was")}
+      <H x={188} y={888} w={872} t={1.5} />
+      <V x={188} y={850} w={872} size={40} align="center">{tcc.prevCargo}</V>
+      {text(924, "Each compartment of the vehicle has been cleaned properly as per", 187)}
+      {text(977, "requirement and it is fit for carrying above product.", 187)}
+      <V x={792} y={962} size={36}>{tcc.prevCargo}</V>
+      {text(1072, "We also certify that the driver of the above vehicle is duly authorized to")}
+      {text(1127, "driver Hazardous goods vehicle and his licence in endorsed to the effect.", 182)}
 
-          <p className="font-bold mb-1">CLEANING DECLARATION</p>
-          <p className="text-justify mb-2">
-            We hereby certify that the tanker vehicle bearing No. <b>{vehicle?.regNo || "—"}</b> has been emptied and thoroughly cleaned,
-            washed and dried after the previous cargo of <b>{tcc.prevCargo || "—"}</b>. {tcc.declaration}
-          </p>
-          <p className="text-justify mb-2">
-            We further confirm that <b>each and every compartment</b> of the tanker has been properly cleaned, and that the tanker is
-            <b> fit to carry the next product</b> without any risk of contamination, odour or residue.
-          </p>
-          <p className="text-justify mb-4">This certificate is issued on behalf of M/s <b>{tcc.onBehalf || "—"}</b> at the request of the consignor/consignee.</p>
+      {/* driver */}
+      {text(1240, "Name of the Driver :", 175)}
+      <H x={425} y={1264} w={640} t={1.5} />
+      <V x={425} y={1218} w={640} size={38} align="center">{driver?.name}</V>
+      {text(1345, "Signature of the Driver :", 172)}
+      <H x={460} y={1368} w={605} t={1.5} />
 
-          <div className="grid grid-cols-2 gap-6 mt-8">
-            <div><div className="border-t border-black mt-10 pt-1 text-[10px]"><b>DRIVER SIGNATURE</b><br />{driver?.name || ""}</div></div>
-            <div className="text-right"><div className="border-t border-black mt-10 pt-1 text-[10px]"><b>FOR A.H. TRANSPORT CO.</b><br />Authorised Signatory &amp; Company Stamp</div></div>
-          </div>
-        </div>
-        <div className="border-t border-black text-center text-[8px] py-1 bg-green-50">
-          {COMPANY.name} · {COMPANY.address} · GSTIN {COMPANY.gstin} · PAN {COMPANY.pan} — Computer generated document
-        </div>
-      </div>
-    </div>
+      {/* company sign-off */}
+      <T x={658} y={1418} size={27} bold>For : {firm.display.toUpperCase()}</T>
+      <T x={750} y={1508} size={24}>Authorised Signature</T>
+    </ScaledCanvas>
   );
 }
