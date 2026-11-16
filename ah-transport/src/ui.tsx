@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -108,9 +108,16 @@ export function SearchBox({ value, onChange, placeholder = "Search…" }: { valu
   );
 }
 export function Table({ headers, children, empty }: { headers: string[]; children: React.ReactNode; empty?: boolean }) {
+  const ref = useRef<HTMLTableElement>(null);
+  // Phones show every row as a card: tag each cell with its column title so the card can print it as a label.
+  useEffect(() => {
+    ref.current?.querySelectorAll("tbody tr").forEach((tr) => {
+      Array.from(tr.children).forEach((td, i) => { const l = headers[i] || ""; if (td.getAttribute("data-label") !== l) td.setAttribute("data-label", l); });
+    });
+  });
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table ref={ref} className="rtable w-full text-sm">
         <thead>
           <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-500">
             {headers.map((h) => <th key={h} className="px-3 py-2.5 font-semibold whitespace-nowrap">{h}</th>)}
