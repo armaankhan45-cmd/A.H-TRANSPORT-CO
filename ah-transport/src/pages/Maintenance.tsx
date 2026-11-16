@@ -207,7 +207,7 @@ export default function Maintenance() {
             <Field label="Actual Cost (₹)"><Input type="number" value={form.actualCost} onChange={(e) => setForm({ ...form, actualCost: Number(e.target.value) })} /></Field>
             <div />
             <Field label="Description / Work Performed" className="sm:col-span-2 lg:col-span-3"><Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
-            <FileField label="Invoice upload" value={form.invoice} onChange={(_n, d) => setForm({ ...form, invoice: d })} />
+            <FileField label="Invoice upload" value={form.invoice} onChange={(n, d) => setForm({ ...form, invoice: d ? n : "" })} />
             <FileField label="Before-maintenance photos" value={form.beforePhotos ? "uploaded" : ""} onChange={(_n, d) => setForm({ ...form, beforePhotos: d })} accept="image/*" />
             <FileField label="After-maintenance photos" value={form.afterPhotos ? "uploaded" : ""} onChange={(_n, d) => setForm({ ...form, afterPhotos: d })} accept="image/*" />
             <Field label="Remarks" className="sm:col-span-2 lg:col-span-3"><Textarea rows={2} value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></Field>

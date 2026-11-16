@@ -1,7 +1,7 @@
 /* A.H. Transport TMS — lightweight offline shell service worker.
    Caches the app shell so the PWA opens offline; live data requires network
    (or a Supabase offline queue in a future phase). */
-const CACHE = "ah-tms-v1";
+const CACHE = "ah-tms-v2";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

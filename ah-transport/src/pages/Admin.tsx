@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStore, PERMISSIONS, CLOUD } from "../store";
+import { useStore, PERMISSIONS } from "../store";
 import { Card, PageHeader, Table, Button, Badge, Input, Field, Select, Modal, Tabs, Stat } from "../ui";
 import { Plus, ShieldCheck, UserCog, ScrollText, Settings, Database, KeyRound } from "lucide-react";
 import { fmtDate, todayISO, uid } from "../company";
@@ -18,7 +18,7 @@ export default function Admin() {
   const save = () => {
     if (!form) return;
     if (!form.name || !form.email) return toast("Name and email are required", "error");
-    if (!CLOUD && form.password.length < 6) return toast("Password must be at least 6 characters", "error");
+    if (form.password.length < 6) return toast("Password must be at least 6 characters", "error");
     if (db.users.some((u) => u.id !== form.id && u.email.toLowerCase() === form.email.toLowerCase())) return toast("Email already exists", "error");
     set((d) => {
       if (form.id) { const i = d.users.findIndex((u) => u.id === form.id); if (i >= 0) d.users[i] = form; }
@@ -34,7 +34,7 @@ export default function Admin() {
   return (
     <div>
       <PageHeader title="Users, Roles & Security" subtitle="Role-based access control, audit log, backup guidance"
-        actions={isSuper && !CLOUD ? <Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add User</Button> : <span className="text-xs text-gray-500">{CLOUD ? "Add users in Supabase → Authentication, then set role/status here" : "User management is restricted to Super Admin"}</span>} />
+        actions={isSuper ? <Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add User</Button> : <span className="text-xs text-gray-500">User management is restricted to Super Admin</span>} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <Stat label="Users" value={db.users.length} icon={<UserCog className="w-5 h-5" />} tone="green" />
@@ -103,12 +103,12 @@ export default function Admin() {
                 const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
                 const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ah_tms_backup_${todayISO()}.json`; a.click(); toast("Backup JSON downloaded");
               }}>Export backup (JSON)</Button>
-              {!CLOUD && <Button variant="secondary" size="sm" onClick={() => document.getElementById("import-file")?.click()}>Import backup</Button>}
+              <Button variant="secondary" size="sm" onClick={() => document.getElementById("import-file")?.click()}>Import backup</Button>
               <input id="import-file" type="file" accept="application/json" className="hidden" onChange={(e) => {
                 const f = e.target.files?.[0]; if (!f) return;
                 const r = new FileReader(); r.onload = () => { try { const parsed = JSON.parse(String(r.result)); set((d) => { Object.assign(d, parsed); }); toast("Backup restored"); } catch { toast("Invalid backup file", "error"); } }; r.readAsText(f);
               }} />
-              {!CLOUD && <Button variant="danger" size="sm" onClick={() => { if (confirm("Reset all data to demo seed? This cannot be undone.")) reset(); }}>Reset demo data</Button>}
+              <Button variant="danger" size="sm" onClick={() => { if (confirm("Reset all data to demo seed? This cannot be undone.")) reset(); }}>Reset demo data</Button>
             </div>
             <p className="text-[11px] text-gray-500 mt-3">Production: enable Supabase daily backups (free tier: 7-day retention on paid plans; on free tier take scheduled <code>pg_dump</code> exports). Store a copy off-site.</p>
           </Card>
@@ -131,7 +131,7 @@ export default function Admin() {
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Full Name" required><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
             <Field label="Email" required><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-            {!CLOUD && <Field label="Password" required hint="Demo only"><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>}
+            <Field label="Password" required hint="Demo only — Supabase Auth hashes passwords in production"><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
             <Field label="Role"><Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>{ROLES.map((r) => <option key={r}>{r}</option>)}</Select></Field>
             {form.role === "Driver" && <Field label="Linked Driver Record" className="sm:col-span-2"><Select value={form.driverId || ""} onChange={(e) => setForm({ ...form, driverId: e.target.value })}><option value="">Select driver</option>{db.drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></Field>}
             <Field label="Status"><Select value={form.active ? "1" : "0"} onChange={(e) => setForm({ ...form, active: e.target.value === "1" })}><option value="1">Active</option><option value="0">Disabled</option></Select></Field>

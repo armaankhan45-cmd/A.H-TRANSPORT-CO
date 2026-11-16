@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -108,16 +108,9 @@ export function SearchBox({ value, onChange, placeholder = "Search…" }: { valu
   );
 }
 export function Table({ headers, children, empty }: { headers: string[]; children: React.ReactNode; empty?: boolean }) {
-  const ref = useRef<HTMLTableElement>(null);
-  // Phones show every row as a card: tag each cell with its column title so the card can print it as a label.
-  useEffect(() => {
-    ref.current?.querySelectorAll("tbody tr").forEach((tr) => {
-      Array.from(tr.children).forEach((td, i) => { const l = headers[i] || ""; if (td.getAttribute("data-label") !== l) td.setAttribute("data-label", l); });
-    });
-  });
   return (
     <div className="overflow-x-auto">
-      <table ref={ref} className="rtable w-full text-sm">
+      <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-500">
             {headers.map((h) => <th key={h} className="px-3 py-2.5 font-semibold whitespace-nowrap">{h}</th>)}
@@ -134,18 +127,46 @@ export function Empty({ text = "No records found" }: { text?: string }) {
 }
 export function FileField({ label, value, onChange, accept = "image/*,application/pdf" }: { label: string; value: string; onChange: (name: string, data: string) => void; accept?: string }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const toDataUrl = (blob: Blob, name: string) => {
+    const r = new FileReader();
+    r.onload = () => { onChange(name, String(r.result || "")); setBusy(false); };
+    r.onerror = () => { setError("Could not read this file. Please try another file."); setBusy(false); };
+    r.readAsDataURL(blob);
+  };
+  const handleFile = async (f?: File) => {
+    if (!f) return;
+    setError(""); setBusy(true);
+    try {
+      if (f.type.startsWith("image/")) {
+        const bitmap = await createImageBitmap(f);
+        let scale = Math.min(1, 1400 / Math.max(bitmap.width, bitmap.height));
+        let blob: Blob | null = null;
+        for (let i = 0; i < 5; i++) {
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+          canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+          canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.78));
+          if (blob && blob.size <= 350 * 1024) break;
+          scale *= 0.78;
+        }
+        bitmap.close();
+        if (!blob || blob.size > 450 * 1024) throw new Error("Image is too large after compression. Try a smaller image.");
+        toDataUrl(blob, f.name.replace(/\.[^.]+$/, "") + ".jpg");
+      } else {
+        if (f.size > 450 * 1024) throw new Error("For browser demo storage, PDF files must be 450 KB or smaller. Production private upload requires backend integration.");
+        toDataUrl(f, f.name);
+      }
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not process file."); setBusy(false); }
+  };
   return (
-    <Field label={label} hint="">
+    <Field label={label} hint="Images are compressed for browser demo storage; PDFs over 450 KB are rejected.">
       <input type="file" accept={accept} className="block w-full text-xs text-gray-600 file:mr-2 file:rounded-md file:border-0 file:bg-green-800 file:px-3 file:py-1.5 file:text-white"
-        onChange={(e) => {
-          const f = e.target.files?.[0]; if (!f) return;
-          if (f.size > 1.5 * 1024 * 1024) { alert("File larger than 1.5 MB — demo storage keeps files in the browser. In production use Supabase private storage."); }
-          setBusy(true);
-          const r = new FileReader();
-          r.onload = () => { onChange(f.name, String(r.result || "")); setBusy(false); };
-          r.readAsDataURL(f);
-        }} />
-      {value && <span className="block text-[11px] text-green-700 mt-1 truncate">✓ {value.slice(0, 40)} {busy && "…"}</span>}
+        onChange={(e) => { void handleFile(e.target.files?.[0]); e.currentTarget.value = ""; }} />
+      {busy && <span className="block text-[11px] text-gray-500 mt-1">Compressing / loading…</span>}
+      {error && <span role="alert" className="block text-[11px] text-red-700 mt-1">{error}</span>}
+      {value && <span className="block text-[11px] text-green-700 mt-1 truncate">✓ {value.slice(0, 40)}</span>}
     </Field>
   );
 }

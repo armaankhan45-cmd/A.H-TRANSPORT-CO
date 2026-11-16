@@ -116,6 +116,6 @@ export function seedDB(): DB {
     audits: [{ id: uid(), time: new Date().toISOString(), user: "System", action: "Seed", detail: "Demo data loaded (clearly labelled). Replace with real data after security testing." }],
     seq: { lr: 4, tcc: 3, trip: 5 },
     settings: { notifyDays: 30, trackingPolicy: "Tracking only during trip hours with driver consent. Location retained 30 days." },
-    locations: drivers.slice(0, 4).map((dr, i) => ({ driverId: dr.id, lat: 19.076 + i * 0.05, lng: 72.877 + i * 0.04, updated: new Date().toISOString(), consent: i < 2 })),
+    locations: [],
   };
 }

@@ -1,40 +1,13 @@
-export interface Firm {
-  id: string; name: string; display: string; tagline: string; address: string; email: string; website: string;
-  gstin: string; pan: string; phones: string[]; logo: boolean; placeholder?: boolean;
-}
-export const DEFAULT_FIRM = "ah-transport";
-export const FIRMS: Firm[] = [
-  {
-    id: DEFAULT_FIRM,
-    name: "A.H. TRANSPORT CO.",
-    display: "A. H. Transport Co.",
-    tagline: "FLEET OWNERS & TRANSPORT CONTRACTORS, CHEMICAL OIL & BULK CARGO",
-    address: "Unit No. 11, 2nd Floor, 'A' Wing, Sita Estate, Aziz Baug, Chembur, Mumbai - 400074.",
-    email: "ahtransportco@gmail.com",
-    website: "ahtransportco.com",
-    gstin: "27AWAPK1208Q1ZF",
-    pan: "AWAPK1208Q",
-    phones: ["99876 76737", "99309 15750", "98922 74370", "96196 47420"],
-    logo: true,
-  },
-  {
-    // PLACEHOLDER details: replace with the real AH Logistic India details (name, address, phones, email, website, GSTIN, PAN).
-    id: "ah-logistic",
-    name: "AH LOGISTIC INDIA",
-    display: "AH Logistic India",
-    tagline: "TRANSPORT & LOGISTICS SERVICES",
-    address: "[Address of AH Logistic India - to be updated]",
-    email: "[email]",
-    website: "[website]",
-    gstin: "[GSTIN]",
-    pan: "[PAN]",
-    phones: ["[phone 1]", "[phone 2]"],
-    logo: false,
-    placeholder: true,
-  },
-];
-export const COMPANY = FIRMS[0];
-export const firmById = (id?: string) => FIRMS.find((f) => f.id === id) ?? FIRMS[0];
+export const COMPANY = {
+  name: "A.H. TRANSPORT CO.",
+  tagline: "Fleet Owners & Transport Contractors — Chemical Oil & Bulk Cargo",
+  address: "Unit No. 11, 2nd Floor, 'A' Wing, Sita Estate, Aziz Baug, Chembur, Mumbai - 400074",
+  email: "ahtransportco@gmail.com",
+  website: "ahtransportco.com",
+  gstin: "27AWAPK1208Q1ZF",
+  pan: "AWAPK1208Q",
+  phones: ["99876 76737", "99309 15750", "98922 74370", "96196 47420"],
+};
 export const VEHICLE_TYPES = ["Tanker", "Bulker", "Trailer", "Truck", "Container"];
 export const VEHICLE_STATUSES = ["Available", "On Trip", "Under Maintenance", "Temporarily Unavailable", "Inactive"];
 export const DOC_TYPES = ["RC Book", "Insurance", "Fitness Certificate", "PUC", "National Permit", "State Permit", "Road Tax", "Tanker Inspection Certificate", "Other"];
@@ -43,7 +16,7 @@ export const MAINT_STATUSES = ["Scheduled", "In Progress", "Completed", "Cancell
 export const TRIP_STATUSES = ["Planned", "Vehicle Assigned", "Loading", "In Transit", "Reported", "Waiting for Unloading", "Unloaded", "Completed", "Cancelled"];
 export const EXP_CATS = ["Diesel", "Toll", "Driver allowance", "Repair", "Maintenance", "Tyres", "Insurance", "Permit", "Tax", "Office expenses", "Other"];
 export const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-export function uid() { return crypto.randomUUID(); }
+export function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
 export function todayISO() { return new Date().toISOString().slice(0, 10); }
 export function fmtDate(d: string) { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
 export function fmtINR(n: number) { return "₹" + Number(n || 0).toLocaleString("en-IN"); }

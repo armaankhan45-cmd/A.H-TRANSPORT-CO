@@ -56,12 +56,17 @@ and seeded with clearly-labelled demo records.
 > Change these before real use. Demo data must be removed:
 > **Users & Settings → Settings & Backup → Reset demo data**.
 
-### Build / preview
+### Build / preview / browser checks
 
 ```bash
 npm run build        # tsc + vite production build → dist/
 npm run preview      # serve the production build
+npm run dev          # in another terminal, then:
+npm run test:workflow # create vehicle → add paper/image → add driver/assign → create LR → verify LR on vehicle
+npm run test:smoke    # broad module, calculation, export and mobile smoke test
 ```
+
+The browser tests need the dev server at `http://127.0.0.1:5173` and Playwright Chromium installed (`npx playwright install chromium`).
 
 ---
 

@@ -7,7 +7,7 @@ import { downloadReport } from "../pdf";
 import * as XLSX from "xlsx";
 
 export default function Reports() {
-  const { db, toast, firm } = useStore();
+  const { db, toast } = useStore();
   const [report, setReport] = useState("Vehicle-wise Trip Report");
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
@@ -85,7 +85,7 @@ export default function Reports() {
     }
   }, [report, db, month]);
 
-  const exportPDF = () => { downloadReport(report, data.headers, data.rows.map((r) => r.map(String)), firm); toast("PDF exported"); };
+  const exportPDF = () => { downloadReport(report, data.headers, data.rows.map((r) => r.map(String))); toast("PDF exported"); };
   const exportExcel = () => {
     const ws = XLSX.utils.aoa_to_sheet([data.headers, ...data.rows]);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Report");

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStore, CLOUD } from "../store";
+import { useStore } from "../store";
 import { COMPANY } from "../company";
 import { Button, Input, Field } from "../ui";
 import { Lock, Mail, Truck, ShieldCheck, Smartphone } from "lucide-react";
@@ -21,7 +21,7 @@ export default function Login() {
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     setBusy(true); setErr(null);
-    login(email, password).then((r) => setErr(r)).catch(() => setErr("Could not sign in. Check your connection.")).finally(() => setBusy(false));
+    setTimeout(() => { const r = login(email, password); setErr(r); setBusy(false); }, 250);
   };
 
   return (
@@ -79,7 +79,7 @@ export default function Login() {
               {err && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{err}</p>}
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
             </form>
-            {!CLOUD && <div className="mt-5 border-t border-dashed pt-4">
+            <div className="mt-5 border-t border-dashed pt-4">
               <p className="text-[11px] font-semibold text-gray-500 mb-2">DEMO ACCOUNTS — click to fill</p>
               <div className="grid grid-cols-2 gap-2">
                 {DEMO.map((d) => (
@@ -91,7 +91,7 @@ export default function Login() {
                 ))}
               </div>
               <p className="text-[10px] text-gray-400 mt-2">Demo data only. Do not enter real Aadhaar/PAN/salary data until Supabase RLS & private storage are configured and tested.</p>
-            </div>}
+            </div>
           </div>
         </div>
       </div>

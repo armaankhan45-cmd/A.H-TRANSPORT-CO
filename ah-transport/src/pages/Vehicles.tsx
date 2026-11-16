@@ -22,16 +22,34 @@ export default function Vehicles() {
   const save = () => {
     if (!form) return;
     if (!form.regNo.trim()) return toast("Vehicle registration number is required", "error");
-    if (db.vehicles.some((v) => v.id !== form.id && v.regNo.toLowerCase() === form.regNo.trim().toLowerCase())) return toast("This registration number already exists", "error");
-    if (form.id) {
-      set((d) => { const i = d.vehicles.findIndex((v) => v.id === form.id); if (i >= 0) d.vehicles[i] = form; d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Vehicle updated", detail: form.regNo }); });
-      toast("Vehicle updated");
-    } else {
-      const id = uid();
-      set((d) => { d.vehicles.push({ ...form, id }); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Vehicle added", detail: form.regNo }); });
-      toast("Vehicle added");
+    const duplicate = db.vehicles.find((v) => v.id !== form.id && v.regNo.trim().toUpperCase() === form.regNo.trim().toUpperCase());
+    if (duplicate) {
+      toast(`${duplicate.regNo} is already in the demo fleet. Opening that record so you can edit it or add its papers.`, "error");
+      setForm(null); setDetail(duplicate); return;
     }
-    setForm(null);
+    if (form.driverId && db.assignments.some((a) => a.driverId === form.driverId && !a.endDate && a.vehicleId !== form.id))
+      return toast("This driver already has an active vehicle assignment. Change it in Assignments first.", "error");
+
+    const isNew = !form.id;
+    const saved = { ...form, id: form.id || uid(), regNo: form.regNo.trim().toUpperCase() };
+    set((d) => {
+      const previous = d.vehicles.find((v) => v.id === saved.id);
+      const oldDriverId = previous?.driverId || "";
+      if (previous) Object.assign(previous, saved); else d.vehicles.push(saved);
+      if (oldDriverId && oldDriverId !== saved.driverId) {
+        d.assignments.filter((a) => a.vehicleId === saved.id && a.driverId === oldDriverId && !a.endDate).forEach((a) => { a.endDate = todayISO(); a.remarks = `${a.remarks} · Changed from vehicle record`.trim(); });
+        const oldDriver = d.drivers.find((x) => x.id === oldDriverId); if (oldDriver?.vehicleId === saved.id) oldDriver.vehicleId = "";
+      }
+      if (saved.driverId) {
+        const driver = d.drivers.find((x) => x.id === saved.driverId);
+        if (driver) driver.vehicleId = saved.id;
+        if (!d.assignments.some((a) => a.vehicleId === saved.id && a.driverId === saved.driverId && !a.endDate))
+          d.assignments.unshift({ id: uid(), driverId: saved.driverId, vehicleId: saved.id, startDate: todayISO(), endDate: "", remarks: "Assigned from vehicle record" });
+      }
+      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: isNew ? "Vehicle added" : "Vehicle updated", detail: saved.regNo });
+    });
+    toast(isNew ? "Vehicle added. Add papers or review assignment in this vehicle record." : "Vehicle updated");
+    setForm(null); setDetail(saved);
   };
 
   const remove = () => {
@@ -50,6 +68,7 @@ export default function Vehicles() {
       <PageHeader title="Vehicle Management" subtitle={`${db.vehicles.length} vehicles in fleet`}
         actions={<Button onClick={() => setForm({ ...blank })}><Plus className="w-4 h-4" /> Add Vehicle</Button>} />
 
+      <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900"><b>Demo fleet note:</b> sample vehicles are preloaded. <b>MH43CK8150 already exists</b>; use View/Edit to add or update its details and papers. To create a different vehicle, enter a unique registration number. New vehicles open their record after saving so papers and trips can be added straight away.</div>
       <Card className="p-3 mb-4 flex flex-col sm:flex-row gap-2">
         <SearchBox value={q} onChange={setQ} placeholder="Search reg no, type, chassis…" />
         <Select value={statusF} onChange={(e) => setStatusF(e.target.value)} className="sm:w-52">
@@ -138,6 +157,7 @@ function VehicleDetail({ v }: { v: Vehicle }) {
   const hist = docs.filter((d) => d.status === "Superseded");
   const maint = db.maintenance.filter((m) => m.vehicleId === v.id);
   const trips = db.trips.filter((t) => t.vehicleId === v.id);
+  const lrs = db.lrs.filter((lr) => lr.vehicleId === v.id).sort((a, b) => b.date.localeCompare(a.date));
   const totalMaintDays = maint.reduce((a, m) => a + durationDays(m.startDate, m.actualEnd), 0);
   const totalMaintCost = maint.reduce((a, m) => a + (m.actualCost || m.estCost || 0), 0);
 
@@ -164,7 +184,7 @@ function VehicleDetail({ v }: { v: Vehicle }) {
 
   return (
     <div>
-      <Tabs tabs={["Details", "Documents", "Maintenance", "Trips"]} active={tab} onChange={setTab} />
+      <Tabs tabs={["Details", "Documents", "Maintenance", "Trips", "LRs"]} active={tab} onChange={setTab} />
       {tab === "Details" && (
         <div className="grid sm:grid-cols-2 gap-4">
           <Card className="p-3">
@@ -227,8 +247,8 @@ function VehicleDetail({ v }: { v: Vehicle }) {
           <Modal open={!!docForm} onClose={() => setDocForm(null)} title="Vehicle Document">
             {docForm && (
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Document Type" required><Select value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}>{DOC_TYPES.map((d) => <option key={d}>{d}</option>)}</Select></Field>
-                <Field label="Document Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
+                <Field label="Document / Paper Name" required hint="Choose a common paper or type a custom name"><Input list="vehicle-paper-types" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} placeholder="e.g. Fitness Certificate" /><datalist id="vehicle-paper-types">{DOC_TYPES.map((d) => <option key={d} value={d} />)}</datalist></Field>
+                <Field label="Document Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} placeholder="e.g. 9 NO" /></Field>
                 <Field label="Issue Date"><Input type="date" value={docForm.issueDate} onChange={(e) => setDocForm({ ...docForm, issueDate: e.target.value })} /></Field>
                 <Field label="Expiry Date" required><Input type="date" value={docForm.expiryDate} onChange={(e) => setDocForm({ ...docForm, expiryDate: e.target.value })} /></Field>
                 <div className="sm:col-span-2"><FileField label="Upload document / photo / PDF" value={docForm.fileName} onChange={(n, data) => setDocForm({ ...docForm, fileName: n, fileData: data })} /></div>
@@ -269,6 +289,15 @@ function VehicleDetail({ v }: { v: Vehicle }) {
             <tr key={t.id}><td className="px-3 py-2 text-xs font-semibold">{t.tripNo}</td><td className="px-3 py-2 text-xs">{t.customer}</td><td className="px-3 py-2 text-xs">{t.loadingLoc} → {t.unloadingLoc}</td><td className="px-3 py-2 text-xs">{fmtINR(t.totalFreight)}</td><td className="px-3 py-2">{statusBadge(t.status)}</td></tr>
           ))}
         </Table>
+      )}
+
+      {tab === "LRs" && (
+        <div>
+          <p className="text-xs text-gray-500 mb-2">All LR drafts and final receipts linked to {v.regNo}. New LRs for this vehicle appear here immediately.</p>
+          <Table headers={["LR Number", "Date", "Consignor", "Consignee", "Goods", "Status"]} empty={lrs.length === 0}>
+            {lrs.map((lr) => <tr key={lr.id}><td className="px-3 py-2 text-xs font-semibold">{lr.lrNo}</td><td className="px-3 py-2 text-xs">{fmtDate(lr.date)}</td><td className="px-3 py-2 text-xs">{lr.consignor}</td><td className="px-3 py-2 text-xs">{lr.consignee}</td><td className="px-3 py-2 text-xs">{lr.goods || "—"}</td><td className="px-3 py-2">{statusBadge(lr.status)}</td></tr>)}
+          </Table>
+        </div>
       )}
     </div>
   );
