@@ -3,6 +3,7 @@ import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, Field, Select, Input, Textarea, Modal, Tabs, Empty, statusBadge } from "../ui";
 import { Link2, Plus, ShieldAlert } from "lucide-react";
 import { fmtDate, todayISO, uid } from "../company";
+import { assignDriver } from "../assign";
 
 export default function Assignments() {
   const { db, set, toast, user } = useStore();
@@ -19,26 +20,10 @@ export default function Assignments() {
 
   const assign = () => {
     if (!driverId || !vehicleId) return toast("Select both driver and vehicle", "error");
-    const veh = db.vehicles.find((v) => v.id === vehicleId);
-    const drv = db.drivers.find((d) => d.id === driverId);
-    if (!veh || !drv) return;
-    if (drv.status !== "Active") return toast("Driver is not active", "error");
-    const existing = db.assignments.find((a) => a.driverId === driverId && !a.endDate);
-    if (existing && existing.vehicleId !== vehicleId && !override) return toast("Driver already assigned to another vehicle. Admin override required.", "error");
-    if (veh.status === "Under Maintenance" && !override) return toast("Vehicle is Under Maintenance. Authorised admin override required.", "error");
-    if (db.assignments.some((a) => a.vehicleId === vehicleId && !a.endDate) && !override) return toast("Vehicle already has an active driver. Override required.", "error");
-
-    set((d) => {
-      // close existing assignments
-      d.assignments.filter((a) => (a.driverId === driverId || a.vehicleId === vehicleId) && !a.endDate).forEach((a) => { a.endDate = startDate; a.remarks += " (auto-closed)"; });
-      d.assignments.unshift({ id: uid(), driverId, vehicleId, startDate, endDate: "", remarks });
-      const dr = d.drivers.find((x) => x.id === driverId); if (dr) dr.vehicleId = vehicleId;
-      const vv = d.vehicles.find((x) => x.id === vehicleId); if (vv) { vv.driverId = driverId; if (vv.status === "Available") vv.status = "Available"; }
-      // clear other drivers assigned to same vehicle
-      d.drivers.filter((x) => x.vehicleId === vehicleId && x.id !== driverId).forEach((x) => { x.vehicleId = ""; });
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: override ? "Driver assigned (override)" : "Driver assigned", detail: `${drv.name} → ${veh.regNo} from ${startDate}` });
-    });
-    toast(`${drv.name} assigned to ${veh.regNo}`);
+    const err = assignDriver(set, db, { driverId, vehicleId, startDate, remarks, override, who: user?.name || "Admin" });
+    if (err) return toast(err, "error");
+    const v = db.vehicles.find((x) => x.id === vehicleId), dr = db.drivers.find((x) => x.id === driverId);
+    toast(`${dr?.name} assigned to ${v?.regNo}`);
     setOpen(false); setDriverId(""); setVehicleId(""); setRemarks(""); setOverride(false);
   };
 

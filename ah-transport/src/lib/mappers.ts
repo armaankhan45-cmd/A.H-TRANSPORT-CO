@@ -214,9 +214,15 @@ export const COLLS: Coll[] = [
 ];
 
 
-/** Every collection carries its firm (column `firm`, see migration 0006). */
+import { caps } from "./caps";
+/** Every collection carries its firm (column `firm`, migration 0006); drivers also carry a tracking token (0007). */
 COLLS.forEach((c) => {
   const from = c.fromRow, to = c.toRow;
-  c.fromRow = (r) => ({ ...from(r), firm: r.firm || "ah-transport" });
-  c.toRow = (i) => ({ ...to(i), firm: i.firm || "ah-transport" });
+  c.fromRow = (r) => ({ ...from(r), firm: r.firm || "ah-transport", ...(c.key === "drivers" ? { trackToken: r.track_token || "" } : {}) });
+  c.toRow = (i) => {
+    const row = { ...to(i) };
+    if (caps.firm) row.firm = i.firm || "ah-transport";
+    if (c.key === "drivers" && caps.track && i.trackToken) row.track_token = i.trackToken;
+    return row;
+  };
 });

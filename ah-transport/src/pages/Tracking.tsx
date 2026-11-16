@@ -1,78 +1,71 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Button, Badge, Stat, Table, Select, Field, Textarea, Modal } from "../ui";
-import { MapPin, ShieldCheck, ShieldOff, Navigation, Info, Clock } from "lucide-react";
-import { fmtDate, uid } from "../company";
+import { Card, PageHeader, Button, Stat, Table, Textarea, Badge } from "../ui";
+import { MapPin, ShieldCheck, Navigation, Info, RefreshCw, Users } from "lucide-react";
+import TrackActions from "../components/TrackActions";
+import { ago } from "../tracking";
 
+/** Live driver locations. Drivers share only after opening their private link and tapping Allow — there is no admin "grant". */
 export default function Tracking() {
-  const { db, set, toast } = useStore();
+  const { db, set, toast, reload } = useStore();
   const [sel, setSel] = useState<string | null>(null);
   const [policy, setPolicy] = useState(db.settings.trackingPolicy);
+  const [busy, setBusy] = useState(false);
 
-  const consented = db.locations.filter((l) => l.consent);
-  const activeTrips = db.trips.filter((t) => !["Completed", "Cancelled"].includes(t.status));
+  useEffect(() => { const t = setInterval(() => { void reload(); }, 15000); return () => clearInterval(t); }, [reload]);
 
-  const toggleConsent = (driverId: string) => {
-    set((d) => {
-      const l = d.locations.find((x) => x.driverId === driverId);
-      if (l) l.consent = !l.consent;
-      else d.locations.push({ driverId, lat: 19.076, lng: 72.877, updated: new Date().toISOString(), consent: true });
-      const dr = d.drivers.find((x) => x.id === driverId);
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Tracking consent changed", detail: `${dr?.name}: ${l?.consent ? "revoked" : "granted"}` });
-    });
-    toast("Consent updated");
-  };
+  const drivers = db.drivers.filter((d) => d.status === "Active");
+  const locOf = (id: string) => db.locations.find((l) => l.driverId === id && l.consent);
+  const live = drivers.filter((d) => { const l = locOf(d.id); return l && ago(l.updated).live; }).length;
+  const sharing = drivers.filter((d) => locOf(d.id)).length;
+  const first = drivers.find((d) => locOf(d.id));
+  const selDriver = db.drivers.find((d) => d.id === (sel || first?.id));
+  const selLoc = selDriver ? locOf(selDriver.id) : undefined;
+  const veh = (id: string) => db.vehicles.find((v) => v.id === id)?.regNo || "—";
 
   return (
     <div>
-      <PageHeader title="GPS Location Tracking" subtitle="Consent-based, policy-bound driver location — never silent collection" />
+      <PageHeader title="Driver Location Tracking" subtitle="Drivers share only after they open their link and tap Allow — no login needed"
+        actions={<Button variant="secondary" onClick={async () => { setBusy(true); await reload(); setBusy(false); toast("Refreshed"); }}><RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} /> Refresh</Button>} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <Stat label="Tracked drivers" value={consented.length} sub="With active consent" icon={<Navigation className="w-5 h-5" />} tone="green" />
-        <Stat label="Consent pending" value={db.drivers.filter((d) => !db.locations.find((l) => l.driverId === d.id && l.consent)).length} icon={<ShieldOff className="w-5 h-5" />} tone="amber" />
-        <Stat label="Active trips" value={activeTrips.length} icon={<MapPin className="w-5 h-5" />} tone="blue" />
-        <Stat label="Retention" value="30 days" sub="Configurable" icon={<Clock className="w-5 h-5" />} tone="gray" />
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <Stat label="Sharing live" value={live} sub="Updated in last 5 min" icon={<Navigation className="w-5 h-5" />} tone="green" />
+        <Stat label="Have shared" value={sharing} sub="Location on file" icon={<MapPin className="w-5 h-5" />} tone="blue" />
+        <Stat label="Active drivers" value={drivers.length} icon={<Users className="w-5 h-5" />} tone="gray" />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2 p-4">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><MapPin className="w-4 h-4 text-green-700" /> Authorised driver locations (map placeholder)</h3>
-          <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-[radial-gradient(circle_at_30%_20%,#dcfce7,transparent_60%),radial-gradient(circle_at_70%_80%,#dbeafe,transparent_55%)] h-72">
-            <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 300">
-              {Array.from({ length: 10 }).map((_, i) => <line key={"h" + i} x1="0" y1={i * 30} x2="400" y2={i * 30} stroke="#cbd5e1" strokeWidth="0.5" />)}
-              {Array.from({ length: 14 }).map((_, i) => <line key={"v" + i} x1={i * 30} y1="0" x2={i * 30} y2="300" stroke="#cbd5e1" strokeWidth="0.5" />)}
-            </svg>
-            {consented.map((l, i) => {
-              const dr = db.drivers.find((d) => d.id === l.driverId);
-              const x = 40 + ((l.lng - 72.7) * 600) % 320;
-              const y = 40 + ((19.2 - l.lat) * 600) % 220;
-              return (
-                <button key={l.driverId} onClick={() => setSel(l.driverId)} className="absolute -translate-x-1/2 -translate-y-1/2 group" style={{ left: x, top: y }}>
-                  <span className="block w-4 h-4 rounded-full bg-green-600 border-2 border-white shadow-lg group-hover:scale-125 transition" />
-                  <span className="absolute left-5 top-0 whitespace-nowrap text-[10px] font-semibold bg-white/90 px-1.5 rounded shadow">{dr?.name.split(" ")[0]} · {db.vehicles.find((v) => v.id === dr?.vehicleId)?.regNo || "—"}</span>
-                </button>
-              );
-            })}
-            {consented.length === 0 && <p className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">No driver has granted consent yet.</p>}
-            <span className="absolute bottom-1 right-2 text-[9px] text-gray-500">Illustrative map · integrate Mapbox/Leaflet + Supabase Realtime in production</span>
-          </div>
-          <Table headers={["Driver", "Vehicle", "Latitude", "Longitude", "Last updated", "Consent", "Action"]}>
-            {db.locations.map((l) => {
-              const dr = db.drivers.find((d) => d.id === l.driverId);
-              return (
-                <tr key={l.driverId}>
-                  <td className="px-3 py-2 text-xs font-semibold">{dr?.name}</td>
-                  <td className="px-3 py-2 text-xs">{db.vehicles.find((v) => v.id === dr?.vehicleId)?.regNo || "—"}</td>
-                  <td className="px-3 py-2 text-xs font-mono">{l.lat.toFixed(4)}</td>
-                  <td className="px-3 py-2 text-xs font-mono">{l.lng.toFixed(4)}</td>
-                  <td className="px-3 py-2 text-xs">{new Date(l.updated).toLocaleString("en-IN")}</td>
-                  <td className="px-3 py-2"><Badge cls={l.consent ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>{l.consent ? "Granted" : "Revoked"}</Badge></td>
-                  <td className="px-3 py-2"><Button size="sm" variant="secondary" onClick={() => toggleConsent(l.driverId)}>{l.consent ? "Revoke" : "Grant"}</Button></td>
-                </tr>
-              );
-            })}
-          </Table>
-        </Card>
+        <div className="lg:col-span-2 space-y-4">
+          <Card className="p-3">
+            {selLoc && selDriver ? (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <p className="text-sm font-semibold">{selDriver.name} · {veh(selDriver.vehicleId)} <span className="text-xs font-normal text-gray-500">— {ago(selLoc.updated).text}</span></p>
+                  <Button size="sm" variant="secondary" onClick={() => window.open(`https://www.google.com/maps?q=${selLoc.lat},${selLoc.lng}`, "_blank")}>Open in Google Maps</Button>
+                </div>
+                <iframe title="map" className="w-full h-72 rounded-lg border border-gray-200" loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${selLoc.lng - 0.02},${selLoc.lat - 0.012},${selLoc.lng + 0.02},${selLoc.lat + 0.012}&layer=mapnik&marker=${selLoc.lat},${selLoc.lng}`} />
+              </>
+            ) : <p className="text-sm text-gray-500 py-10 text-center">No driver has shared a location yet. Use <b>Send link</b> below — the driver opens it and taps Allow.</p>}
+          </Card>
+
+          <Card className="p-0 overflow-hidden">
+            <Table headers={["Driver", "Vehicle", "Location", "Last update", "Actions"]} empty={drivers.length === 0}>
+              {drivers.map((d) => {
+                const l = locOf(d.id);
+                return (
+                  <tr key={d.id} onClick={() => l && setSel(d.id)} className={`${l ? "cursor-pointer" : ""} ${selDriver?.id === d.id ? "bg-green-50" : "hover:bg-gray-50"}`}>
+                    <td className="px-3 py-2 text-xs font-semibold">{d.name}<span className="block text-[10px] font-normal text-gray-500">{d.mobile}</span></td>
+                    <td className="px-3 py-2 text-xs">{veh(d.vehicleId)}</td>
+                    <td className="px-3 py-2 text-xs font-mono">{l ? `${l.lat.toFixed(4)}, ${l.lng.toFixed(4)}` : "—"}</td>
+                    <td className="px-3 py-2 text-xs">{l ? <Badge cls={ago(l.updated).live ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}>{ago(l.updated).text}</Badge> : "—"}</td>
+                    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}><TrackActions driver={d} compact /></td>
+                  </tr>
+                );
+              })}
+            </Table>
+          </Card>
+        </div>
 
         <div className="space-y-4">
           <Card className="p-4">
@@ -81,31 +74,15 @@ export default function Tracking() {
             <Button className="mt-2 w-full" size="sm" onClick={() => { set((d) => { d.settings.trackingPolicy = policy; }); toast("Tracking policy saved"); }}>Save policy</Button>
           </Card>
           <Card className="p-4 text-xs text-gray-600 space-y-2">
-            <p className="font-semibold text-gray-900 flex items-center gap-1"><Info className="w-4 h-4" /> Honest limitations</p>
-            <p>• Continuous background GPS is <b>not</b> guaranteed in a browser/PWA. For reliable tracking, ship the Android app with a <b>foreground location service</b> (persistent notification, <code>ACCESS_BACKGROUND_LOCATION</code> handled per Play Store policy).</p>
-            <p>• Location is only collected while the driver has explicitly granted consent, and can be revoked from the driver app at any time.</p>
-            <p>• Location rows are protected by RLS: a driver can only insert/read their own row; admins read authorised rows only.</p>
-            <p>• Retention: automatic purge job after the configured period (default 30 days).</p>
+            <p className="font-semibold text-gray-900 flex items-center gap-1"><Info className="w-4 h-4" /> How it works</p>
+            <p>1. Tap <b>Send link</b> — WhatsApp opens with a private link for that driver.</p>
+            <p>2. The driver opens it, reads what is shared and taps <b>Allow</b>. No login or password.</p>
+            <p>3. Their phone sends its position about every 15 seconds while the page is open.</p>
+            <p>4. <b>Stop</b> disables the link and deletes their saved points. The driver can also stop from their phone.</p>
+            <p className="pt-1 border-t border-gray-100"><b>Limit:</b> a web page can only share while it stays open on the phone (screen on). Switching apps or locking the phone can pause it. Tracking that keeps running in the background needs a small Android app.</p>
           </Card>
         </div>
       </div>
-
-      <Modal open={!!sel} onClose={() => setSel(null)} title="Driver location details">
-        {sel && (() => {
-          const l = db.locations.find((x) => x.driverId === sel);
-          const dr = db.drivers.find((d) => d.id === sel);
-          return l ? (
-            <div className="text-sm space-y-1">
-              <p><b>Driver:</b> {dr?.name}</p>
-              <p><b>Vehicle:</b> {db.vehicles.find((v) => v.id === dr?.vehicleId)?.regNo || "—"}</p>
-              <p><b>Coordinates:</b> {l.lat.toFixed(5)}, {l.lng.toFixed(5)}</p>
-              <p><b>Updated:</b> {new Date(l.updated).toLocaleString("en-IN")}</p>
-              <p><b>Consent:</b> {l.consent ? "Granted" : "Revoked"}</p>
-              <Button size="sm" className="mt-2" variant="secondary" onClick={() => window.open(`https://www.google.com/maps?q=${l.lat},${l.lng}`, "_blank")}>Open in Maps</Button>
-            </div>
-          ) : <p>No location data.</p>;
-        })()}
-      </Modal>
     </div>
   );
 }

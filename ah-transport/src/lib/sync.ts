@@ -1,3 +1,4 @@
+import { caps } from "./caps";
 /**
  * Keeps the in-memory DB (what every page already uses) in sync with Supabase.
  *  - pullAll():      load everything the signed-in user is ALLOWED to see (Row Level Security decides)
@@ -189,4 +190,14 @@ export async function pushChanges(prev: DB, next: DB, userId?: string): Promise<
     }
   }
   return { patches, seqs };
+}
+
+/** Checks which database upgrades have been run. Returns the SQL files that are still missing. */
+export async function probeSchema(): Promise<string[]> {
+  const miss: string[] = [];
+  const c = sb();
+  if ((await c.from("trips").select("lr_no").limit(1)).error) miss.push("0005_app_integration.sql");
+  const f = !(await c.from("vehicles").select("firm").limit(1)).error; caps.firm = f; if (!f) miss.push("0006_firms.sql");
+  const k = !(await c.from("drivers").select("track_token").limit(1)).error; caps.track = k; if (!k) miss.push("0007_tracking.sql");
+  return miss;
 }

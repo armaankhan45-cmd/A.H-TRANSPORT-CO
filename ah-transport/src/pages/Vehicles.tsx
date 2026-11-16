@@ -4,6 +4,8 @@ import { Card, PageHeader, Button, Input, Select, Field, Textarea, Modal, Table,
 import { Plus, Pencil, Trash2, Eye, FileText, Truck, Wrench, Route, Upload, History, AlertTriangle } from "lucide-react";
 import { VEHICLE_TYPES, VEHICLE_STATUSES, DOC_TYPES, durationDays, expiryInfo, fmtDate, fmtINR, todayISO, uid, daysLeft } from "../company";
 import type { Vehicle, VehicleDoc } from "../types";
+import { assignDriver, releaseDriver } from "../assign";
+import { Check, Circle, UserPlus } from "lucide-react";
 
 const blank: Vehicle = { id: "", regNo: "", type: "Tanker", manufacturer: "", model: "", capacity: "", chassis: "", engine: "", mfgYear: "", fuel: "Diesel", status: "Available", driverId: "", purchaseDate: "", photo: "", notes: "" };
 
@@ -12,7 +14,8 @@ export default function Vehicles() {
   const [q, setQ] = useState("");
   const [statusF, setStatusF] = useState("");
   const [form, setForm] = useState<Vehicle | null>(null);
-  const [detail, setDetail] = useState<Vehicle | null>(null);
+  const [detail, setDetail] = useState<{ id: string; tab?: string; fresh?: boolean } | null>(null);
+  const detailV = db.vehicles.find((v) => v.id === detail?.id);
   const [del, setDel] = useState<Vehicle | null>(null);
 
   const list = db.vehicles.filter((v) =>
@@ -29,7 +32,10 @@ export default function Vehicles() {
     } else {
       const id = uid();
       set((d) => { d.vehicles.push({ ...form, id }); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Vehicle added", detail: form.regNo }); });
-      toast("Vehicle added");
+      toast("Vehicle added — now add its papers");
+      setForm(null);
+      setDetail({ id, tab: "Papers", fresh: true });   // straight on to papers, then driver
+      return;
     }
     setForm(null);
   };
@@ -82,7 +88,7 @@ export default function Vehicles() {
                 <td className="px-3 py-2">{statusBadge(v.status)}</td>
                 <td className="px-3 py-2">
                   <div className="flex gap-1">
-                    <button title="View" onClick={() => setDetail(v)} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
+                    <button title="View" onClick={() => setDetail({ id: v.id })} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
                     <button title="Edit" onClick={() => setForm({ ...v })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
                     <button title="Deactivate" onClick={() => setDel(v)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
                   </div>
@@ -121,16 +127,20 @@ export default function Vehicles() {
 
       <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={remove} message={`Deactivate vehicle ${del?.regNo}? Records are retained — the vehicle is marked Inactive, never permanently deleted.`} />
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={`Vehicle ${detail?.regNo || ""}`} wide>
-        {detail && <VehicleDetail v={detail} />}
+      <Modal open={!!detailV} onClose={() => setDetail(null)} title={`Vehicle ${detailV?.regNo || ""}`} wide>
+        {detailV && <VehicleDetail key={detailV.id} v={detailV} tab0={detail?.tab} fresh={detail?.fresh} />}
       </Modal>
     </div>
   );
 }
 
-function VehicleDetail({ v }: { v: Vehicle }) {
-  const { db, set, toast } = useStore();
-  const [tab, setTab] = useState("Details");
+function VehicleDetail({ v, tab0, fresh }: { v: Vehicle; tab0?: string; fresh?: boolean }) {
+  const { db, set, toast, user } = useStore();
+  const [tab, setTab] = useState(tab0 || "Details");
+  const [pick, setPick] = useState("");
+  const [override, setOverride] = useState(false);
+  const lrs = db.lrs.filter((l) => l.vehicleId === v.id);
+  const tccs = db.tccs.filter((t) => t.vehicleId === v.id);
   const [docForm, setDocForm] = useState<VehicleDoc | null>(null);
   const driver = db.drivers.find((d) => d.id === v.driverId);
   const docs = db.vehicleDocs.filter((d) => d.vehicleId === v.id);
@@ -141,11 +151,14 @@ function VehicleDetail({ v }: { v: Vehicle }) {
   const totalMaintDays = maint.reduce((a, m) => a + durationDays(m.startDate, m.actualEnd), 0);
   const totalMaintCost = maint.reduce((a, m) => a + (m.actualCost || m.estCost || 0), 0);
 
-  const newDoc = (type?: string): VehicleDoc => ({ id: "", vehicleId: v.id, name: type || "Insurance", docNo: "", issueDate: todayISO(), expiryDate: "", fileName: "", fileData: "", remarks: "", status: "Current" });
+  const newDoc = (type?: string): VehicleDoc => ({ id: "", vehicleId: v.id, name: type ?? "Insurance", docNo: "", issueDate: todayISO(), expiryDate: "", fileName: "", fileData: "", remarks: "", status: "Current" });
 
   const saveDoc = () => {
     if (!docForm) return;
+    const name = docForm.name.trim();
+    if (!name) return toast("Type the paper name (e.g. Insurance, Fitness, Calibration)", "error");
     if (!docForm.expiryDate) return toast("Expiry date is required", "error");
+    docForm.name = name;
     set((d) => {
       if (docForm.id) {
         const i = d.vehicleDocs.findIndex((x) => x.id === docForm.id);
@@ -164,7 +177,17 @@ function VehicleDetail({ v }: { v: Vehicle }) {
 
   return (
     <div>
-      <Tabs tabs={["Details", "Documents", "Maintenance", "Trips"]} active={tab} onChange={setTab} />
+      {(fresh || !driver || current.length === 0) && (
+        <div className="mb-3 rounded-xl border border-green-200 bg-green-50 p-3 text-xs">
+          <p className="font-semibold text-green-900 mb-1.5">{fresh ? `${v.regNo} added — finish setting it up:` : "Setup checklist"}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+            <span className="flex items-center gap-1 text-green-800"><Check className="w-4 h-4" /> Vehicle details</span>
+            <button onClick={() => setTab("Papers")} className={`flex items-center gap-1 ${current.length ? "text-green-800" : "text-amber-700 font-semibold"}`}>{current.length ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />} Papers ({current.length} added)</button>
+            <button onClick={() => setTab("Driver")} className={`flex items-center gap-1 ${driver ? "text-green-800" : "text-amber-700 font-semibold"}`}>{driver ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />} {driver ? `Driver: ${driver.name}` : "Assign a driver"}</button>
+          </div>
+        </div>
+      )}
+      <Tabs tabs={["Details", "Papers", "Driver", "LR & TCC", "Trips", "Maintenance"]} active={tab} onChange={setTab} />
       {tab === "Details" && (
         <div className="grid sm:grid-cols-2 gap-4">
           <Card className="p-3">
@@ -191,11 +214,17 @@ function VehicleDetail({ v }: { v: Vehicle }) {
         </div>
       )}
 
-      {tab === "Documents" && (
+      {tab === "Papers" && (
         <div>
           <div className="flex justify-between items-center mb-2">
-            <p className="text-xs text-gray-500">Uploaded papers are stored privately in production (Supabase private bucket + signed URLs).</p>
-            <Button size="sm" onClick={() => setDocForm(newDoc())}><Plus className="w-3.5 h-3.5" /> Upload Document</Button>
+            <p className="text-xs text-gray-500">Add each paper with its number, photo/PDF and expiry date. Expiry alerts come from here.</p>
+            <Button size="sm" onClick={() => setDocForm(newDoc(""))}><Plus className="w-3.5 h-3.5" /> Add Paper</Button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {DOC_TYPES.filter((t) => t !== "Other" && !current.some((c) => c.name.toLowerCase() === t.toLowerCase())).map((t) => (
+              <button key={t} onClick={() => setDocForm(newDoc(t))} className="text-xs rounded-full border border-green-300 text-green-800 px-2.5 py-1 hover:bg-green-50">+ {t}</button>
+            ))}
+            <button onClick={() => setDocForm(newDoc(""))} className="text-xs rounded-full border border-dashed border-gray-400 text-gray-600 px-2.5 py-1 hover:bg-gray-50">+ Other paper…</button>
           </div>
           <Table headers={["Document", "Number", "Issue", "Expiry", "Status", "File", "Actions"]} empty={current.length === 0}>
             {current.map((d) => {
@@ -227,17 +256,56 @@ function VehicleDetail({ v }: { v: Vehicle }) {
           <Modal open={!!docForm} onClose={() => setDocForm(null)} title="Vehicle Document">
             {docForm && (
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Document Type" required><Select value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}>{DOC_TYPES.map((d) => <option key={d}>{d}</option>)}</Select></Field>
-                <Field label="Document Number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
+                <Field label="Paper name" required><Input list="vdoc-types" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} placeholder="Pick or type: Insurance, Fitness, Calibration, Form 9…" /><datalist id="vdoc-types">{DOC_TYPES.filter((t) => t !== "Other").map((d) => <option key={d} value={d} />)}</datalist></Field>
+                <Field label="Paper number"><Input value={docForm.docNo} onChange={(e) => setDocForm({ ...docForm, docNo: e.target.value })} /></Field>
                 <Field label="Issue Date"><Input type="date" value={docForm.issueDate} onChange={(e) => setDocForm({ ...docForm, issueDate: e.target.value })} /></Field>
                 <Field label="Expiry Date" required><Input type="date" value={docForm.expiryDate} onChange={(e) => setDocForm({ ...docForm, expiryDate: e.target.value })} /></Field>
-                <div className="sm:col-span-2"><FileField label="Upload document / photo / PDF" value={docForm.fileName} onChange={(n, data) => setDocForm({ ...docForm, fileName: n, fileData: data })} /></div>
+                <div className="sm:col-span-2"><FileField label="Photo / PDF of the paper" value={docForm.fileName} onChange={(n, data) => setDocForm({ ...docForm, fileName: n, fileData: data })} /></div>
                 <Field label="Remarks" className="sm:col-span-2"><Textarea rows={2} value={docForm.remarks} onChange={(e) => setDocForm({ ...docForm, remarks: e.target.value })} /></Field>
                 {docForm.expiryDate && <p className="sm:col-span-2 text-xs"><AlertTriangle className="w-3.5 h-3.5 inline mr-1 text-amber-600" />Validity: <Badge cls={expiryInfo(docForm.expiryDate).cls}>{expiryInfo(docForm.expiryDate).label}</Badge></p>}
                 <div className="sm:col-span-2 flex justify-end gap-2"><Button variant="secondary" onClick={() => setDocForm(null)}>Cancel</Button><Button onClick={saveDoc}>Save Document</Button></div>
               </div>
             )}
           </Modal>
+        </div>
+      )}
+
+      {tab === "Driver" && (
+        <div className="space-y-3">
+          <Card className="p-3">
+            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Current driver</h4>
+            {driver ? (
+              <div className="flex flex-wrap items-center gap-3 justify-between">
+                <div><p className="font-semibold">{driver.name}</p><p className="text-xs text-gray-500">{driver.mobile} · Licence {driver.licenceNo || "—"} {driver.licenceExpiry && <Badge cls={expiryInfo(driver.licenceExpiry).cls}>{expiryInfo(driver.licenceExpiry).label}</Badge>}</p></div>
+                <Button size="sm" variant="secondary" onClick={() => { releaseDriver(set, v.id, user?.name || "Admin"); toast("Driver released from this vehicle"); }}>Release driver</Button>
+              </div>
+            ) : <p className="text-sm text-gray-500">No driver assigned yet.</p>}
+          </Card>
+          <Card className="p-3">
+            <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">{driver ? "Change driver" : "Assign a driver"}</h4>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={pick} onChange={(e) => setPick(e.target.value)}>
+                <option value="">Select driver…</option>
+                {db.drivers.filter((d) => d.status === "Active" && d.id !== v.driverId).map((d) => <option key={d.id} value={d.id}>{d.name} · {d.mobile}{d.vehicleId ? ` (now on ${db.vehicles.find((x) => x.id === d.vehicleId)?.regNo || "another vehicle"})` : " — free"}</option>)}
+              </Select>
+              <Button onClick={() => { if (!pick) return toast("Select a driver first", "error"); const err = assignDriver(set, db, { driverId: pick, vehicleId: v.id, override, who: user?.name || "Admin" }); if (err) return toast(err, "error"); toast("Driver assigned"); setPick(""); setOverride(false); }}><UserPlus className="w-4 h-4" /> Assign</Button>
+            </div>
+            <label className="mt-2 flex items-center gap-2 text-xs text-gray-600"><input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} /> Admin override (move a driver who is on another vehicle / vehicle under maintenance)</label>
+            {db.drivers.filter((d) => d.status === "Active").length === 0 && <p className="text-xs text-amber-700 mt-2">No active drivers yet — add one in the Drivers section first.</p>}
+          </Card>
+        </div>
+      )}
+
+      {tab === "LR & TCC" && (
+        <div className="space-y-4">
+          <div><p className="text-xs font-bold uppercase text-gray-500 mb-2">Lorry receipts on {v.regNo} ({lrs.length})</p>
+            <Table headers={["LR No", "Date", "Consignor → Consignee", "Goods", "Net wt", "Status"]} empty={lrs.length === 0}>
+              {lrs.map((l) => <tr key={l.id}><td className="px-3 py-2 text-xs font-semibold">{l.lrNo}</td><td className="px-3 py-2 text-xs">{fmtDate(l.date)}</td><td className="px-3 py-2 text-xs">{l.consignor} → {l.consignee}</td><td className="px-3 py-2 text-xs">{l.goods}</td><td className="px-3 py-2 text-xs">{l.net}</td><td className="px-3 py-2">{statusBadge(l.status)}</td></tr>)}
+            </Table></div>
+          <div><p className="text-xs font-bold uppercase text-gray-500 mb-2">Cleaning certificates (TCC) ({tccs.length})</p>
+            <Table headers={["TCC No", "Date", "To", "Previous cargo", "Status"]} empty={tccs.length === 0}>
+              {tccs.map((t) => <tr key={t.id}><td className="px-3 py-2 text-xs font-semibold">{t.tccNo}</td><td className="px-3 py-2 text-xs">{fmtDate(t.date)}</td><td className="px-3 py-2 text-xs">{t.recipient}</td><td className="px-3 py-2 text-xs">{t.prevCargo}</td><td className="px-3 py-2">{statusBadge(t.status)}</td></tr>)}
+            </Table></div>
         </div>
       )}
 
