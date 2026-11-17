@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>;
+  return <div className={`bg-white rounded-lg border border-slate-300/70 ${className}`}>{children}</div>;
 }
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{title}</h1>
         {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -19,14 +19,14 @@ export function Button({ children, onClick, variant = "primary", className = "",
   children: React.ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" | "ghost" | "success"; className?: string; type?: "button" | "submit"; disabled?: boolean; size?: "sm" | "md";
 }) {
   const v: Record<string, string> = {
-    primary: "bg-green-800 text-white hover:bg-green-900",
+    primary: "bg-signal text-slate-900 font-semibold hover:bg-signal-dark",
     success: "bg-green-600 text-white hover:bg-green-700",
     secondary: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
     danger: "bg-red-600 text-white hover:bg-red-700",
     ghost: "text-gray-600 hover:bg-gray-100",
   };
   const s = size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3.5 py-2 text-sm";
-  return <button type={type} disabled={disabled} onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${v[variant]} ${s} ${className}`}>{children}</button>;
+  return <button type={type} disabled={disabled} onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${v[variant]} ${s} ${className}`}>{children}</button>;
 }
 export function Field({ label, children, required, hint, className = "" }: { label: string; children: React.ReactNode; required?: boolean; hint?: string; className?: string }) {
   return (
@@ -37,7 +37,7 @@ export function Field({ label, children, required, hint, className = "" }: { lab
     </label>
   );
 }
-const inputCls = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-600 focus:ring-2 focus:ring-green-100";
+const inputCls = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-green-700 focus:ring-2 focus:ring-signal/60";
 export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) { return <input {...p} className={`${inputCls} ${p.className || ""}`} />; }
 export function Textarea(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...p} className={`${inputCls} ${p.className || ""}`} />; }
 export function Select({ children, ...p }: React.SelectHTMLAttributes<HTMLSelectElement>) {
@@ -119,7 +119,7 @@ export function Table({ headers, children, empty }: { headers: string[]; childre
     <div className="overflow-x-auto">
       <table ref={ref} className="rtable w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-500">
+          <tr className="bg-slate-100 text-left text-xs text-slate-600 border-b border-slate-200">
             {headers.map((h) => <th key={h} className="px-3 py-2.5 font-semibold whitespace-nowrap">{h}</th>)}
           </tr>
         </thead>

@@ -90,7 +90,7 @@ export default function TrackShare({ token }: { token: string }) {
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
         <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
         {info === undefined && <p className="py-10 text-lg text-gray-500">…</p>}
-        {info === null && <div className="py-8"><p className="text-lg font-bold">यह लिंक चालू नहीं है</p><p className="text-sm text-gray-500 mt-2">This link is not active. Ask the office for a new link.</p></div>}
+        {info === null && <div className="py-8"><p className="text-lg font-bold">This link is not active</p><p className="text-sm text-gray-500 mt-2">Ask the office to send you a new link.</p></div>}
         {info && (
           <>
             <div className={`mx-auto my-5 w-24 h-24 rounded-full grid place-items-center ${phase === "sharing" ? "bg-green-600" : "bg-green-100"}`}>
@@ -99,23 +99,23 @@ export default function TrackShare({ token }: { token: string }) {
             <p className="text-xl font-bold">{info.name.split(" ")[0]}{info.vehicle ? ` · ${info.vehicle}` : ""}</p>
 
             {phase === "ask" && (<>
-              <p className="text-lg font-semibold mt-4 leading-snug">आपकी गाड़ी की लोकेशन ऑफिस को दिखेगी</p>
-              <p className="text-sm text-gray-500 mt-1">Office will see where your truck is</p>
-              <button onClick={start} className={`${big} bg-green-700 mt-6`}>चालू करें<span className="block text-base font-semibold opacity-90">ALLOW</span></button>
-              <p className="text-xs text-gray-500 mt-4 leading-relaxed">फ़ोन पूछे तो "Allow / अनुमति दें" दबाएं।<br />बंद करने के लिए कभी भी "बंद करें" दबाएं।</p>
+              <p className="text-lg font-semibold mt-4 leading-snug">The office will see where your truck is</p>
+              <p className="text-sm text-gray-500 mt-1">Tap the button below to share your location.</p>
+              <button onClick={start} className={`${big} bg-green-700 mt-6`}>Turn on location<span className="block text-base font-semibold opacity-90">Share my truck location</span></button>
+              <p className="text-xs text-gray-500 mt-4 leading-relaxed">If your phone asks, tap "Allow".<br />You can tap Stop at any time.</p>
             </>)}
 
             {phase === "sharing" && (<>
-              <p className="text-2xl font-extrabold text-green-700 mt-4">✓ लोकेशन चालू है</p>
-              <p className="text-sm text-gray-500 mt-1">Location is ON{lastSent ? ` · ${lastSent}` : ""}</p>
-              {problem && <p className="text-sm text-amber-700 mt-2">GPS का इंतज़ार… / Waiting for GPS</p>}
-              <p className="text-sm text-gray-600 mt-4 leading-relaxed">यह पेज खुला रखें<br /><span className="text-xs text-gray-500">Keep this page open</span></p>
-              <button onClick={stopNow} className={`${big} bg-red-600 mt-6`}>बंद करें<span className="block text-base font-semibold opacity-90">STOP</span></button>
+              <p className="text-2xl font-extrabold text-green-700 mt-4">✓ Location is on</p>
+              <p className="text-sm text-gray-500 mt-1">Sharing with the office{lastSent ? ` · ${lastSent}` : ""}</p>
+              {problem && <p className="text-sm text-amber-700 mt-2">Waiting for GPS signal…</p>}
+              <p className="text-sm text-gray-600 mt-4 leading-relaxed">Keep this page open while driving</p>
+              <button onClick={stopNow} className={`${big} bg-red-600 mt-6`}>Stop<span className="block text-base font-semibold opacity-90">Stop sharing my location</span></button>
             </>)}
 
-            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">लोकेशन बंद हो गई</p><p className="text-sm text-gray-500">Stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>फिर से चालू करें</button></>}
-            {phase === "denied" && <><p className="mt-4 text-lg font-bold text-red-700">लोकेशन की अनुमति बंद है</p><p className="text-sm text-gray-600 mt-2">फ़ोन की Settings में इस साइट के लिए Location चालू करें, फिर यह पेज दोबारा खोलें।<br /><span className="text-xs text-gray-500">Allow location for this site in phone settings, then reopen.</span></p></>}
-            {phase === "nogps" && <p className="mt-4 text-lg font-bold text-red-700">इस फ़ोन में लोकेशन नहीं चल सकती</p>}
+            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">Location sharing stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>Turn on again</button></>}
+            {phase === "denied" && <><p className="mt-4 text-lg font-bold text-red-700">Location permission is blocked</p><p className="text-sm text-gray-600 mt-2">Allow location for this site in your phone settings, then open this page again.</p></>}
+            {phase === "nogps" && <p className="mt-4 text-lg font-bold text-red-700">This phone cannot share location</p>}
           </>
         )}
       </div>

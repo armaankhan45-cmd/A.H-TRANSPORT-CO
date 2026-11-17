@@ -26,7 +26,9 @@ export function stopTracking(set: SetFn, driver: Driver, who: string) {
 export function waLink(mobile: string, name: string, url: string) {
   const num = mobile.replace(/\D/g, "").replace(/^0+/, "");
   const full = num.length === 10 ? "91" + num : num;
-  const text = `नमस्ते ${name} जी, A.H. Transport Co.\nअपनी गाड़ी की लोकेशन भेजने के लिए यह लिंक खोलें और हरा बटन "चालू करें" दबाएं:\n${url}`;
+  const text = `Hello ${name}, this is A.H. Transport Co.
+Open this link and tap the big button "Turn on location" so we can see your truck:
+${url}`;
   return `https://wa.me/${full}?text=${encodeURIComponent(text)}`;
 }
 
