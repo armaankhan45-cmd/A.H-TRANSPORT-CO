@@ -9,6 +9,7 @@ import { daysLeft, fmtDate } from "./company";
 import { Badge, Button } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Vehicles from "./pages/Vehicles";
 import Documents from "./pages/Documents";
 import Maintenance from "./pages/Maintenance";
@@ -25,22 +26,23 @@ import Tracking from "./pages/Tracking";
 import Admin from "./pages/Admin";
 import DriverPortal from "./pages/DriverPortal";
 
-export const NAV = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "vehicles", label: "Vehicles", icon: Truck },
+export const NAV: { key: string; label: string; hi?: string; icon: typeof Truck; core?: boolean }[] = [
+  { key: "dashboard", label: "Home", hi: "होम", icon: LayoutDashboard, core: true },
+  { key: "lr", label: "LR", hi: "LR", icon: ReceiptText, core: true },
+  { key: "tcc", label: "TCC", hi: "TCC", icon: Droplets, core: true },
+  { key: "vehicles", label: "Vehicles", hi: "गाड़ियाँ", icon: Truck, core: true },
+  { key: "drivers", label: "Drivers", hi: "ड्राइवर", icon: Users, core: true },
+  { key: "tracking", label: "Live Location", hi: "लोकेशन", icon: MapPin, core: true },
+  { key: "expiry", label: "Papers & Expiry", hi: "कागज़ात", icon: CalendarClock },
   { key: "documents", label: "Vehicle Papers", icon: FileText },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
-  { key: "expiry", label: "Expiry Dashboard", icon: CalendarClock },
-  { key: "drivers", label: "Drivers", icon: Users },
   { key: "assignments", label: "Assignments", icon: Link2 },
-  { key: "lr", label: "LR Generation", icon: ReceiptText },
-  { key: "tcc", label: "TCC Generation", icon: Droplets },
   { key: "trips", label: "Trips", icon: Route },
   { key: "customers", label: "Customers", icon: Building2 },
   { key: "salary", label: "Salary", icon: Wallet },
   { key: "expenses", label: "Expenses", icon: IndianRupee },
   { key: "reports", label: "Reports", icon: BarChart3 },
-  { key: "tracking", label: "GPS Tracking", icon: MapPin },
+  { key: "overview", label: "Detailed Dashboard", icon: BarChart3 },
   { key: "admin", label: "Users & Settings", icon: ShieldCheck },
 ];
 
@@ -97,7 +99,9 @@ function Shell() {
   if (!user) return <Login />;
 
   const allowed = PERMISSIONS[user.role];
-  const nav = NAV.filter((n) => allowed.includes(n.key));
+  const nav = NAV.filter((n) => allowed.includes(n.key === "overview" ? "dashboard" : n.key));
+  const core = nav.filter((n) => n.core);
+  const more = nav.filter((n) => !n.core);
 
   const render = () => {
     if (user.role === "Driver") return <DriverPortal />;
@@ -117,7 +121,8 @@ function Shell() {
       case "reports": return <Reports />;
       case "tracking": return <Tracking />;
       case "admin": return <Admin />;
-      default: return <Dashboard onNavigate={setPage} />;
+      case "overview": return <Dashboard onNavigate={setPage} />;
+      default: return <Home onNavigate={setPage} />;
     }
   };
 
@@ -144,17 +149,30 @@ function Shell() {
           </div>
         )}
         <nav className="flex-1 overflow-y-auto py-2">
-          {nav.map((n) => {
+          {core.map((n) => {
             const Icon = n.icon;
             const activeItem = page === n.key;
             return (
               <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${activeItem ? "bg-green-800 text-white font-semibold border-r-4 border-green-400" : "text-green-100 hover:bg-green-900"}`}>
-                <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{n.label}</span>
-                {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-base transition ${activeItem ? "bg-green-800 text-white font-semibold border-r-4 border-green-400" : "text-green-100 hover:bg-green-900"}`}>
+                <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{n.label}</span>{n.hi && n.hi !== n.label && <span className="ml-auto text-xs text-green-300">{n.hi}</span>}
               </button>
             );
           })}
+          <details className="mt-2 border-t border-green-900" open={more.some((n) => n.key === page)}>
+            <summary className="px-4 py-3 text-sm text-green-300 cursor-pointer select-none">More / और</summary>
+            {more.map((n) => {
+              const Icon = n.icon;
+              const activeItem = page === n.key;
+              return (
+                <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${activeItem ? "bg-green-800 text-white font-semibold" : "text-green-100 hover:bg-green-900"}`}>
+                  <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{n.label}</span>
+                  {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
+                </button>
+              );
+            })}
+          </details>
         </nav>
         <div className="p-3 border-t border-green-900 text-[11px] text-green-300">
           <p className="truncate">{firm.email}</p>
@@ -222,7 +240,7 @@ function Shell() {
           </div>
         </header>
 
-        <main className="p-3 sm:p-5 flex-1 min-w-0">{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
+        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
           <span>{firm.name} — {firm.address}</span>
           {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}
@@ -235,6 +253,14 @@ function Shell() {
           <div key={t.id} className={`px-4 py-2.5 rounded-lg shadow-lg text-sm text-white ${t.type === "error" ? "bg-red-600" : "bg-green-700"}`}>{t.msg}</div>
         ))}
       </div>
+      {user.role !== "Driver" && (
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 grid grid-cols-6 no-print">
+          {core.map((n) => { const Icon = n.icon; const on = page === n.key; return (
+            <button key={n.key} onClick={() => setPage(n.key)} className={`flex flex-col items-center gap-0.5 py-2 ${on ? "text-green-700" : "text-gray-500"}`}>
+              <Icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} /><span className="text-[10px] font-semibold leading-none">{n.hi || n.label}</span>
+            </button>); })}
+        </nav>
+      )}
     </div>
   );
 }
