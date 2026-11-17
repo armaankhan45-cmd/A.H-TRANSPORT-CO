@@ -25,7 +25,7 @@ export default function Tracking() {
 
   return (
     <div>
-      <PageHeader title="Driver Location Tracking" subtitle="Drivers share only after they open their link and tap Allow — no login needed"
+      <PageHeader title="Driver Location Tracking" subtitle="Drivers say Yes once from their link — no login needed"
         actions={<Button variant="secondary" onClick={async () => { setBusy(true); await reload(); setBusy(false); toast("Refreshed"); }}><RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} /> Refresh</Button>} />
 
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -73,13 +73,10 @@ export default function Tracking() {
             <Textarea rows={4} value={policy} onChange={(e) => setPolicy(e.target.value)} />
             <Button className="mt-2 w-full" size="sm" onClick={() => { set((d) => { d.settings.trackingPolicy = policy; }); toast("Tracking policy saved"); }}>Save policy</Button>
           </Card>
-          <Card className="p-4 text-xs text-gray-600 space-y-2">
-            <p className="font-semibold text-gray-900 flex items-center gap-1"><Info className="w-4 h-4" /> How it works</p>
-            <p>1. Tap <b>Send link</b> — WhatsApp opens with a private link for that driver.</p>
-            <p>2. The driver opens it, reads what is shared and taps <b>Allow</b>. No login or password.</p>
-            <p>3. Their phone sends its position about every 15 seconds while the page is open.</p>
-            <p>4. <b>Stop</b> disables the link and deletes their saved points. The driver can also stop from their phone.</p>
-            <p className="pt-1 border-t border-gray-100"><b>Limit:</b> a web page can only share while it stays open on the phone (screen on). Switching apps or locking the phone can pause it. Tracking that keeps running in the background needs a small Android app.</p>
+          <Card className="p-4 text-sm text-slate-600 space-y-2">
+            <p className="font-semibold text-slate-900 flex items-center gap-1"><Info className="w-4 h-4" /> How it works</p>
+            <p>Send each driver a link. They answer Yes or No once, with no login. You decide when to stop sharing, using the Stop button.</p>
+            <p>"Last seen" shows when the phone last reported. A browser can pause reporting when the phone is locked or the page is closed. For tracking that never pauses, the drivers need an Android app.</p>
           </Card>
         </div>
       </div>

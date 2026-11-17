@@ -145,6 +145,7 @@ export async function pushChanges(prev: DB, next: DB, userId?: string): Promise<
     fail("settings", r.error);
   }
 
+  const dels: [string, string][] = [];
   for (const c of COLLS) {
     const before = new Map<string, Any>(((prev as Any)[c.key] as Any[]).map((x) => [x.id, x]));
     const after = (next as Any)[c.key] as Any[];
@@ -170,8 +171,10 @@ export async function pushChanges(prev: DB, next: DB, userId?: string): Promise<
         const r = await client.from(c.table).update(row).eq("id", item.id); fail(c.table, r.error);
       }
     }
-    for (const [id] of before) if (!afterIds.has(id)) { const r = await client.from(c.table).delete().eq("id", id); fail(c.table, r.error); }
+    for (const [id] of before) if (!afterIds.has(id)) dels.push([c.table, id]);
   }
+  // deletes run last and child-first (reverse of COLLS order) so foreign keys never block them
+  for (const [t, id] of dels.reverse()) { const r = await client.from(t).delete().eq("id", id); fail(t, r.error); }
 
   // audit log (insert only)
   const knownAudit = new Set(prev.audits.map((a) => a.id));

@@ -1,9 +1,21 @@
 import "@fontsource/caveat/500.css";
 import "@fontsource/caveat/700.css";
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 
 /** Forms are laid out in the pixel space of the original scans and scaled to fit, so screen, print and PDF all match. */
 export const INK = "#0b2a8a";
+/** Filled-in text can print as handwriting or as a computer font. The choice is remembered on this device. */
+export type FontMode = "hand" | "print";
+const FKEY = "ah_form_font";
+const subs = new Set<() => void>();
+let mode: FontMode = (() => { try { return localStorage.getItem(FKEY) === "print" ? "print" : "hand"; } catch { return "hand"; } })();
+export const setFontMode = (m: FontMode) => { mode = m; try { localStorage.setItem(FKEY, m); } catch { /* ignore */ } subs.forEach((f) => f()); };
+export const useFontMode = () => useSyncExternalStore((f) => { subs.add(f); return () => { subs.delete(f); }; }, () => mode);
+export function FontToggle() {
+  const m = useFontMode();
+  const b = (v: FontMode, label: string) => <button type="button" onClick={() => setFontMode(v)} className={`px-3 py-1.5 text-sm font-medium ${m === v ? "bg-green-900 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}>{label}</button>;
+  return <div className="inline-flex rounded-md border border-slate-300 overflow-hidden no-print" role="group" aria-label="Text style">{b("hand", "Handwriting")}{b("print", "Computer font")}</div>;
+}
 export const HAND = "'Caveat','Reenie Beanie',cursive";
 export const SERIF = "'AH Bookman','Bookman Old Style',Georgia,'Times New Roman',serif";
 
@@ -18,7 +30,11 @@ export function T({ x, y, w, size = 24, bold, italic, align, ls, lh, children, s
 }
 /** Filled-in value (ink colour). */
 export function V({ x, y, w, size = 32, align, bold = true, children, style }: { x: number; y: number; w?: number; size?: number; align?: "left" | "center" | "right"; bold?: boolean; children: ReactNode; style?: CSSProperties }) {
-  return <div style={at(x, y, w, undefined, { color: INK, fontFamily: HAND, fontSize: size * 1.2, marginTop: -size * 0.1, fontWeight: bold ? 700 : 500, textAlign: align, lineHeight: 1.15, whiteSpace: "nowrap", ...style })}>{children}</div>;
+  const m = useFontMode();
+  const font: CSSProperties = m === "hand"
+    ? { fontFamily: HAND, fontSize: size * 1.2, marginTop: -size * 0.1, fontWeight: bold ? 700 : 500 }
+    : { fontFamily: "Arial, Helvetica, sans-serif", fontSize: size * 0.82, fontWeight: bold ? 700 : 500 };
+  return <div style={at(x, y, w, undefined, { color: INK, ...font, textAlign: align, lineHeight: 1.15, whiteSpace: "nowrap", ...style })}>{children}</div>;
 }
 export const H = ({ x, y, w, t = 2 }: { x: number; y: number; w: number; t?: number }) => <div style={at(x, y, w, 0, { borderTop: `${t}px solid #000` })} />;
 export const Vl = ({ x, y, h, t = 2 }: { x: number; y: number; h: number; t?: number }) => <div style={at(x, y, 0, h, { borderLeft: `${t}px solid #000` })} />;

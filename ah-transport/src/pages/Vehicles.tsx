@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../store";
 import { Card, PageHeader, Button, Input, Select, Field, Textarea, Modal, Table, Badge, statusBadge, SearchBox, Confirm, FileField, Tabs, KV, Empty, Empty as EmptyBox } from "../ui";
-import { Plus, Pencil, Trash2, Eye, FileText, Truck, Wrench, Route, Upload, History, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, Power, Eye, FileText, Truck, Wrench, Route, Upload, History, AlertTriangle } from "lucide-react";
 import { VEHICLE_TYPES, VEHICLE_STATUSES, DOC_TYPES, durationDays, expiryInfo, fmtDate, fmtINR, todayISO, uid, daysLeft } from "../company";
 import type { Vehicle, VehicleDoc } from "../types";
 import { assignDriver, releaseDriver } from "../assign";
+import { deleteVehicle, vehicleImpact } from "../remove";
 import { Check, Circle, UserPlus } from "lucide-react";
 
 const blank: Vehicle = { id: "", regNo: "", type: "Tanker", manufacturer: "", model: "", capacity: "", chassis: "", engine: "", mfgYear: "", fuel: "Diesel", status: "Available", driverId: "", purchaseDate: "", photo: "", notes: "" };
@@ -43,12 +44,19 @@ export default function Vehicles() {
   const remove = () => {
     if (!del) return;
     set((d) => {
-      const v = d.vehicles.find((x) => x.id === del.id);
-      if (v) v.status = "Inactive"; // never hard-delete business records
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Vehicle deactivated", detail: del.regNo + " (history retained)" });
+      deleteVehicle(d, del.id);
+      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: "Vehicle deleted", detail: del.regNo });
     });
-    toast("Vehicle marked inactive (record retained)");
+    toast(`${del.regNo} deleted`);
     setDel(null);
+  };
+  const toggleActive = (v: Vehicle) => {
+    const on = v.status === "Inactive";
+    set((d) => {
+      const x = d.vehicles.find((y) => y.id === v.id); if (x) x.status = on ? "Available" : "Inactive";
+      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: "Admin", action: on ? "Vehicle activated" : "Vehicle deactivated", detail: v.regNo });
+    });
+    toast(`${v.regNo} ${on ? "activated" : "deactivated"}`);
   };
 
   return (
@@ -90,7 +98,8 @@ export default function Vehicles() {
                   <div className="flex gap-1">
                     <button title="View" onClick={() => setDetail({ id: v.id })} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
                     <button title="Edit" onClick={() => setForm({ ...v })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
-                    <button title="Deactivate" onClick={() => setDel(v)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
+                    <button title={v.status === "Inactive" ? "Activate" : "Deactivate"} onClick={() => toggleActive(v)} className="p-1.5 rounded hover:bg-gray-100"><Power className={`w-4 h-4 ${v.status === "Inactive" ? "text-green-600" : "text-amber-600"}`} /></button>
+                    <button title="Delete" onClick={() => setDel(v)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
                   </div>
                 </td>
               </tr>
@@ -125,7 +134,7 @@ export default function Vehicles() {
         )}
       </Modal>
 
-      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={remove} message={`Deactivate vehicle ${del?.regNo}? Records are retained — the vehicle is marked Inactive, never permanently deleted.`} />
+      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={remove} message={del ? (() => { const n = vehicleImpact(db, del.id); return `Delete ${del.regNo} permanently? This also deletes its ${n.papers} papers, ${n.maintenance} maintenance records and ${n.trips} trips. Its ${n.lrs} LRs and ${n.tccs} TCCs are kept. This cannot be undone.`; })() : ""} />
 
       <Modal open={!!detailV} onClose={() => setDetail(null)} title={`Vehicle ${detailV?.regNo || ""}`} wide>
         {detailV && <VehicleDetail key={detailV.id} v={detailV} onEdit={() => setForm({ ...detailV })} tab0={detail?.tab} fresh={detail?.fresh} />}

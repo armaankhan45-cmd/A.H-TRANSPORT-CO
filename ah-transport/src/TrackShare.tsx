@@ -43,7 +43,7 @@ async function stop(token: string) {
 
 export default function TrackShare({ token }: { token: string }) {
   const [info, setInfo] = useState<Info | null | undefined>(undefined);
-  const [phase, setPhase] = useState<"ask" | "sharing" | "stopped" | "denied" | "nogps">("ask");
+  const [phase, setPhase] = useState<"ask" | "declined" | "sharing" | "stopped" | "denied" | "nogps">("ask");
   const [lastSent, setLastSent] = useState<string>("");
   const [problem, setProblem] = useState("");
   const watch = useRef<number | null>(null);
@@ -99,21 +99,21 @@ export default function TrackShare({ token }: { token: string }) {
             <p className="text-xl font-bold">{info.name.split(" ")[0]}{info.vehicle ? ` · ${info.vehicle}` : ""}</p>
 
             {phase === "ask" && (<>
-              <p className="text-lg font-semibold mt-4 leading-snug">The office will see where your truck is</p>
-              <p className="text-sm text-gray-500 mt-1">Tap the button below to share your location.</p>
-              <button onClick={start} className={`${big} bg-green-700 mt-6`}>Turn on location<span className="block text-base font-semibold opacity-90">Share my truck location</span></button>
-              <p className="text-xs text-gray-500 mt-4 leading-relaxed">If your phone asks, tap "Allow".<br />You can tap Stop at any time.</p>
+              <p className="text-xl font-bold mt-4 leading-snug">Share your truck location with {COMPANY.display}?</p>
+              <p className="text-sm text-gray-600 mt-2">You are only asked once. The office decides when sharing ends.</p>
+              <button onClick={start} className={`${big} bg-green-700 mt-6`}>Yes, share</button>
+              <button onClick={() => setPhase("declined")} className="w-full rounded-2xl border-2 border-slate-300 text-slate-700 font-bold py-4 text-xl mt-3">No</button>
             </>)}
 
             {phase === "sharing" && (<>
-              <p className="text-2xl font-extrabold text-green-700 mt-4">✓ Location is on</p>
-              <p className="text-sm text-gray-500 mt-1">Sharing with the office{lastSent ? ` · ${lastSent}` : ""}</p>
+              <p className="text-2xl font-extrabold text-green-700 mt-4">Location sharing is on</p>
+              <p className="text-sm text-gray-600 mt-2">Thank you. The office can see your truck{lastSent ? ` · last sent ${lastSent}` : ""}.</p>
               {problem && <p className="text-sm text-amber-700 mt-2">Waiting for GPS signal…</p>}
-              <p className="text-sm text-gray-600 mt-4 leading-relaxed">Keep this page open while driving</p>
-              <button onClick={stopNow} className={`${big} bg-red-600 mt-6`}>Stop<span className="block text-base font-semibold opacity-90">Stop sharing my location</span></button>
+              <button onClick={stopNow} className="mt-8 text-sm text-slate-500 underline">Stop sharing</button>
             </>)}
 
-            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">Location sharing stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>Turn on again</button></>}
+            {phase === "declined" && <><p className="mt-4 text-xl font-bold">Nothing is shared</p><p className="text-sm text-gray-600 mt-2">You chose No. You can close this page.</p><button onClick={() => setPhase("ask")} className="mt-6 text-sm text-slate-500 underline">Change my answer</button></>}
+            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">Location sharing stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>Share again</button></>}
             {phase === "denied" && <><p className="mt-4 text-lg font-bold text-red-700">Location permission is blocked</p><p className="text-sm text-gray-600 mt-2">Allow location for this site in your phone settings, then open this page again.</p></>}
             {phase === "nogps" && <p className="mt-4 text-lg font-bold text-red-700">This phone cannot share location</p>}
           </>

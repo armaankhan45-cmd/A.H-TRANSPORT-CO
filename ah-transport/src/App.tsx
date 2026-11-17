@@ -241,7 +241,7 @@ function Shell() {
           </div>
         </header>
 
-        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
+        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{!CLOUD && <div className="mb-3 rounded-md border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900"><b>Demo mode.</b> Data here is sample data saved only in this browser. To make this the real app, add the Supabase settings in Vercel (VITE_DATA_MODE=supabase, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) and redeploy.</div>}{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
           <span>{firm.name} — {firm.address}</span>
           {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}

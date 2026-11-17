@@ -115,7 +115,7 @@ export default function Admin() {
           <Card className="p-4 lg:col-span-2">
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-2"><KeyRound className="w-4 h-4" /> Security checklist (production)</h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc pl-5">
-              <li>Authentication handled by Supabase Auth (bcrypt/scrypt hashing server-side) — never store passwords in the app DB. This demo uses localStorage only.</li>
+              <li>Authentication handled by Supabase Auth (bcrypt/scrypt hashing server-side) — never store passwords in the app DB.{!CLOUD ? " This demo build keeps data in this browser only." : ""}</li>
               <li>Row Level Security ON for every table; drivers restricted to rows where <code>driver_id = auth.uid()</code>.</li>
               <li>Private storage buckets (<code>vehicle-docs</code>, <code>driver-docs</code>, <code>receipts</code>) with signed URLs valid for 60 seconds.</li>
               <li>Service-role key used only on the server (Edge Functions) — never shipped in frontend bundles.</li>

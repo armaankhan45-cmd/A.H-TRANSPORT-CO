@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, FileField, Tabs, KV, Stat, Empty } from "../ui";
-import { Plus, Pencil, Eye, UserX, ShieldAlert, IdCard, Upload, UserCheck, Check, Circle, Truck } from "lucide-react";
+import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, Confirm, FileField, Tabs, KV, Stat, Empty } from "../ui";
+import { Plus, Pencil, Trash2, Eye, UserX, ShieldAlert, IdCard, Upload, UserCheck, Check, Circle, Truck } from "lucide-react";
 import TrackActions from "../components/TrackActions";
 import { assignDriver, releaseDriver } from "../assign";
+import { deleteDriver, driverImpact } from "../remove";
 import { daysLeft, expiryInfo, fmtDate, fmtINR, todayISO, uid, netSalary } from "../company";
 import type { DB, Driver, DriverDoc } from "../types";
 
@@ -64,6 +65,14 @@ export default function Drivers() {
     if (isNew) setDetail({ id: newId, tab: "Documents", fresh: true });
   };
 
+  const [del, setDel] = useState<Driver | null>(null);
+  const removeDriver = () => {
+    if (!del) return;
+    set((d) => { deleteDriver(d, del.id); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "Driver deleted", detail: del.name }); });
+    toast(`${del.name} deleted`);
+    setDel(null);
+  };
+
   const setStatus = (d0: Driver, status: string) => {
     set((d) => {
       const dr = d.drivers.find((x) => x.id === d0.id);
@@ -118,13 +127,15 @@ export default function Drivers() {
                 <td className="px-3 py-2 whitespace-nowrap">
                   <button onClick={() => setDetail({ id: d.id })} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button onClick={() => setForm({ ...d })} className="p-1.5 rounded hover:bg-gray-100" title="Edit"><Pencil className="w-4 h-4 text-blue-600" /></button>
-                  {d.status === "Active" ? <button onClick={() => setStatus(d, "Inactive")} className="p-1.5 rounded hover:bg-gray-100" title="Deactivate"><UserX className="w-4 h-4 text-red-500" /></button> : <button onClick={() => setStatus(d, "Active")} className="p-1.5 rounded hover:bg-gray-100" title="Rejoin"><UserCheck className="w-4 h-4 text-green-600" /></button>}
+                  {d.status === "Active" ? <button onClick={() => setStatus(d, "Inactive")} className="p-1.5 rounded hover:bg-gray-100" title="Deactivate"><UserX className="w-4 h-4 text-red-500" /></button> : <button onClick={() => setStatus(d, "Active")} className="p-1.5 rounded hover:bg-gray-100" title="Activate"><UserCheck className="w-4 h-4 text-green-600" /></button>}
+                  <button onClick={() => setDel(d)} className="p-1.5 rounded hover:bg-gray-100" title="Delete"><Trash2 className="w-4 h-4 text-red-600" /></button>
                 </td>
               </tr>
             );
           })}
         </Table>
       </Card>
+      <Confirm open={!!del} onCancel={() => setDel(null)} onConfirm={removeDriver} message={del ? (() => { const n = driverImpact(db, del.id); return `Delete ${del.name} permanently? This also deletes their ${n.papers} documents and ${n.salaries} salary records. Trips and LR/TCC copies are kept. This cannot be undone.`; })() : ""} />
 
       <Modal open={!!form} onClose={closeForm} title={form?.id ? "Edit Driver" : "Add Driver"} wide>
         {form && (
