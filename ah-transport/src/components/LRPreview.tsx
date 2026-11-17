@@ -14,6 +14,9 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
   const pill = (x: number, w: number, label: string) => <div style={at(x, 659, w, 42, { border: "2px solid #000", borderRadius: 22, background: "#fff", fontSize: 21, fontWeight: 700, lineHeight: "20px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" })}><div dangerouslySetInnerHTML={{ __html: label }} /></div>;
   const addr = (v: string) => <V x={125} y={538} w={645} size={26} bold={false} style={{ whiteSpace: "normal", lineHeight: "57px" }}>{v}</V>;
   const [p1, ...rest] = firm.phones;
+  const reg = lrVehicleNo(lr, vehicle?.regNo).trim().toUpperCase();
+  const m = reg.replace(/\s+/g, "").match(/^([A-Z]{2}\d{1,2}[A-Z]{0,3})(\d{3,4})$/);
+  const regLines = m ? [m[1], m[2]] : reg.split(/\s+/).filter(Boolean);
   return (
     <ScaledCanvas w={LR_W} h={LR_H}>
       {/* letterhead */}
@@ -86,7 +89,7 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
       <V x={700} y={728} w={210} size={24} align="center">{lr.gross}</V>
       <V x={700} y={790} w={210} size={24} align="center">{lr.tare}</V>
       <V x={700} y={905} w={210} size={40} align="center">{lr.net}</V>
-      <V x={60} y={790} w={225} size={32} align="center">{lrVehicleNo(lr, vehicle?.regNo)}</V>
+      <V x={60} y={regLines.length > 1 ? 770 : 812} w={225} size={50} align="center" style={{ whiteSpace: "normal", lineHeight: "56px" }}>{regLines.map((l) => <div key={l}>{l}</div>)}</V>
       <V x={300} y={770} w={375} size={52} align="center" style={{ whiteSpace: "normal", lineHeight: "56px" }}>{lr.goods}</V>
       {lr.quantity && <V x={300} y={720} w={375} size={20} bold={false} align="center">{lr.quantity}</V>}
       <T x={305} y={909} size={22}>Value :</T>

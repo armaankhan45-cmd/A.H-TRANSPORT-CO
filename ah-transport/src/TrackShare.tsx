@@ -6,7 +6,10 @@ import { DATA_MODE, supabase } from "./lib/supabase";
 /** Page a driver opens from the private link. No login. Nothing is sent until the driver taps Allow. */
 type Info = { name: string; vehicle: string | null };
 const DEMO_KEY = "ah_tms_db_v1";
-const SEND_EVERY_MS = 15000;
+const SEND_EVERY_MS = 10000;      // heartbeat while parked
+const MOVE_METRES = 25;           // send straight away after moving this far
+const GOOD_ACCURACY_M = 80;       // ignore fixes worse than this unless nothing better arrives
+const dist = (a: GeolocationCoordinates, b: GeolocationCoordinates) => { const R = 6371000, r = Math.PI / 180, dLat = (b.latitude - a.latitude) * r, dLng = (b.longitude - a.longitude) * r; const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * r) * Math.cos(b.latitude * r) * Math.sin(dLng / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
 
 async function getInfo(token: string): Promise<Info | null> {
   if (DATA_MODE === "supabase" && supabase) {
@@ -49,27 +52,42 @@ export default function TrackShare({ token }: { token: string }) {
   const watch = useRef<number | null>(null);
   const timer = useRef<number | null>(null);
   const latest = useRef<GeolocationPosition | null>(null);
+  const lastSentPos = useRef<GeolocationPosition | null>(null);
+  const lastGood = useRef(0);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
   const flag = `ah_track_ok_${token}`;
 
   const push = useCallback(async () => {
     const p = latest.current; if (!p) return;
     const ok = await send(token, p.coords.latitude, p.coords.longitude, p.coords.accuracy, p.coords.speed);
-    if (ok) { setLastSent(new Date().toLocaleTimeString("en-IN")); setProblem(""); }
+    if (ok) { lastSentPos.current = p; setLastSent(new Date().toLocaleTimeString("en-IN")); setProblem(""); }
     else setProblem("Could not reach the office. Check your internet — will keep trying.");
   }, [token]);
 
   const start = useCallback(() => {
     if (!navigator.geolocation) { setPhase("nogps"); return; }
     watch.current = navigator.geolocation.watchPosition(
-      (p) => { const first = !latest.current; latest.current = p; if (first) void push(); },
+      (p) => {
+        const good = p.coords.accuracy <= GOOD_ACCURACY_M;
+        if (good) lastGood.current = Date.now();
+        // keep only accurate fixes; accept a poor one only if no good fix for 60 s (e.g. inside a building)
+        if (!good && latest.current && Date.now() - lastGood.current < 60000) return;
+        const first = !latest.current; latest.current = p;
+        if (first || (lastSentPos.current && dist(lastSentPos.current.coords, p.coords) >= MOVE_METRES)) void push();
+      },
       (e) => { if (e.code === e.PERMISSION_DENIED) { setPhase("denied"); try { localStorage.removeItem(flag); } catch { /* ignore */ } } else setProblem("Waiting for GPS signal…"); },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 });
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 });
     timer.current = window.setInterval(() => void push(), SEND_EVERY_MS);
     try { localStorage.setItem(flag, "1"); } catch { /* ignore */ }
     setPhase("sharing");
     try { void (navigator as any).wakeLock?.request("screen").then((w: any) => { wake.current = w; }).catch(() => undefined); } catch { /* ignore */ }
   }, [push, flag]);
+
+  useEffect(() => {
+    const f = () => { if (document.visibilityState === "visible" && watch.current != null) { void push(); try { void (navigator as any).wakeLock?.request("screen").then((w: any) => { wake.current = w; }).catch(() => undefined); } catch { /* ignore */ } } };
+    document.addEventListener("visibilitychange", f);
+    return () => document.removeEventListener("visibilitychange", f);
+  }, [push]);
 
   const halt = useCallback(() => {
     if (watch.current != null) navigator.geolocation.clearWatch(watch.current);

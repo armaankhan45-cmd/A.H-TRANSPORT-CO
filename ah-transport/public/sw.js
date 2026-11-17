@@ -1,7 +1,7 @@
 /* A.H. Transport TMS — app-shell service worker.
    SECURITY: only caches this site's own static files. It NEVER touches Supabase/API
    requests, so salary, Aadhaar, documents etc. are never stored in the browser cache. */
-const CACHE = "ah-tms-v2";
+const CACHE = "ah-tms-v3";
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/index.html", "/manifest.webmanifest"])).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));

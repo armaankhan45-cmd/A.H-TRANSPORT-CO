@@ -1,6 +1,7 @@
 import { useStore } from "../store";
 import { daysLeft, fmtDate } from "../company";
 import { askNew } from "../launch";
+import InstallApp from "../components/InstallApp";
 import { FilePlus2, Droplets, Truck, Users, MapPin, FileText, ChevronRight, CircleCheck } from "lucide-react";
 
 export default function Home({ onNavigate }: { onNavigate: (p: string) => void }) {
@@ -25,6 +26,8 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
     <div className="max-w-5xl">
       <h1 className="text-3xl font-bold leading-tight">{firm.display}</h1>
       <p className="text-slate-600 mt-1 mb-6">What do you want to do?</p>
+
+      <InstallApp />
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
