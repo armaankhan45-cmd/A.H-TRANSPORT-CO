@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { takeNew } from "../launch";
+import { FontToggle } from "../components/formKit";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Textarea, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
@@ -106,7 +107,8 @@ export default function TCCPage() {
       <Modal open={!!preview} onClose={() => setPreview(null)} title={`TCC ${preview?.tccNo || ""} — A4 Preview`} wide>
         {preview && (
           <div>
-            <div className="flex flex-wrap gap-2 mb-3 no-print">
+            <div className="flex flex-wrap items-center gap-2 mb-3 no-print">
+              <FontToggle />
               <Button variant="secondary" onClick={doPrint}><Printer className="w-4 h-4" /> Print A4</Button>
               <Button variant="secondary" onClick={() => downloadTCC(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
               <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`A.H. TRANSPORT CO. — TCC ${preview.tccNo} dated ${fmtDate(preview.date)} for vehicle ${vehicle(preview.vehicleId)?.regNo}. Tanker cleaned & fit for next product.`)}`, "_blank")}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>

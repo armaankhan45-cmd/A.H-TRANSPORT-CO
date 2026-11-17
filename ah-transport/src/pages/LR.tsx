@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { takeNew } from "../launch";
+import { FontToggle } from "../components/formKit";
 import { lrVehicleNo, lrValueText, packLR, normReg } from "../lrExtra";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
@@ -154,7 +155,8 @@ export default function LRPage() {
       <Modal open={!!preview} onClose={() => setPreview(null)} title={`LR ${preview?.lrNo || ""} — A4 Preview`} wide>
         {preview && (
           <div>
-            <div className="flex flex-wrap gap-2 mb-3 no-print">
+            <div className="flex flex-wrap items-center gap-2 mb-3 no-print">
+              <FontToggle />
               <Button variant="secondary" onClick={doPrint}><Printer className="w-4 h-4" /> Print A4</Button>
               <Button variant="secondary" onClick={() => downloadLR(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
               <Button variant="secondary" onClick={() => shareWhatsApp(preview)}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>

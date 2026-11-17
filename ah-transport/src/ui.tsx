@@ -139,7 +139,7 @@ export function FileField({ label, value, onChange, accept = "image/*,applicatio
       <input type="file" accept={accept} className="block w-full text-xs text-gray-600 file:mr-2 file:rounded-md file:border-0 file:bg-green-800 file:px-3 file:py-1.5 file:text-white"
         onChange={(e) => {
           const f = e.target.files?.[0]; if (!f) return;
-          if (f.size > 1.5 * 1024 * 1024) { alert("File larger than 1.5 MB — demo storage keeps files in the browser. In production use Supabase private storage."); }
+          if (f.size > 1.5 * 1024 * 1024) { alert("This file is larger than 1.5 MB. Choose a smaller file or take a lower-resolution photo."); }
           setBusy(true);
           const r = new FileReader();
           r.onload = () => { onChange(f.name, String(r.result || "")); setBusy(false); };
