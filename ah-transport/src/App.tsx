@@ -10,6 +10,7 @@ import { Badge, Button } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import { askNew } from "./launch";
 import Vehicles from "./pages/Vehicles";
 import Documents from "./pages/Documents";
 import Maintenance from "./pages/Maintenance";
@@ -50,7 +51,7 @@ const TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.key,
 
 function Shell() {
   const { user, db, logout, can, toasts, reset, booting, firm, firms, switchFirm, issues } = useStore();
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => { try { const q = new URLSearchParams(location.search); const pg = q.get("page"); if (pg && q.get("new")) askNew(); return pg || "dashboard"; } catch { return "dashboard"; } });
   const [sidebar, setSidebar] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [globalQ, setGlobalQ] = useState("");
