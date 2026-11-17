@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Textarea, Modal, Tabs, Confirm, Empty } from "../ui";
-import { Plus, Printer, Download, Share2, Eye, Pencil, Trash2, FileText, CheckCircle2, MessageCircle, Mail } from "lucide-react";
+import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
+import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, fmtINR, todayISO, uid, nextSeq } from "../company";
 import { downloadLR, printCanvas } from "../pdf";
 import LRPreview, { LR_H, LR_W } from "../components/LRPreview";
@@ -27,17 +27,23 @@ export default function LRPage() {
 
   const newLR = () => {
     const lrNo = nextSeq("LR", db.seq.lr);
+    setVehTxt("");
     setForm(blank(lrNo));
   };
 
-  const save = (finalise = false) => {
+  const [vehTxt, setVehTxt] = useState("");
+  const norm = (x: string) => x.replace(/[\s-]/g, "").toUpperCase();
+  const editLR = (l: LR) => { setPreview(null); setVehTxt(db.vehicles.find((v) => v.id === l.vehicleId)?.regNo || ""); setForm({ ...l }); };
+
+  const save = () => {
     if (!form) return;
+    if (!form.lrNo.trim()) return toast("Enter the LR number", "error");
     if (!form.consignor.trim() || !form.consignee.trim()) return toast("Consignor and consignee are required", "error");
-    if (!form.vehicleId) return toast("Select a vehicle", "error");
-    const veh = db.vehicles.find((v) => v.id === form.vehicleId);
-    if (veh?.status === "Under Maintenance" && !form.id) return toast("Vehicle is under maintenance and cannot be loaded for a new LR without an admin override.", "error");
+    const veh = db.vehicles.find((v) => norm(v.regNo) === norm(vehTxt));
+    if (!veh) return toast(vehTxt.trim() ? `Vehicle ${vehTxt.trim()} is not in your vehicle list — add it in Vehicles first` : "Select the vehicle number", "error");
+    if (veh.status === "Under Maintenance" && !form.id) return toast("Vehicle is under maintenance and cannot be loaded for a new LR without an admin override.", "error");
+    const rec: LR = { ...form, vehicleId: veh.id, driverId: form.driverId || veh.driverId || "", status: "Final" };
     set((d) => {
-      const rec: LR = { ...form, status: finalise ? "Final" : "Draft" };
       if (form.id) {
         const i = d.lrs.findIndex((x) => x.id === form.id);
         if (i >= 0) d.lrs[i] = rec;
@@ -45,9 +51,9 @@ export default function LRPage() {
         d.lrs.push({ ...rec, id: uid() });
         d.seq.lr += 1;
       }
-      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: finalise ? "LR finalised" : "LR saved as draft", detail: `${rec.lrNo} — ${rec.consignor} → ${rec.consignee}` });
+      d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: form.id ? "LR edited" : "LR created", detail: `${rec.lrNo} — ${rec.consignor} → ${rec.consignee}` });
     });
-    toast(finalise ? `${form.lrNo} finalised` : `${form.lrNo} saved as draft`);
+    toast(`${form.lrNo} saved`);
     setForm(null);
   };
 
@@ -90,7 +96,7 @@ export default function LRPage() {
               <td className="px-3 py-2">
                 <div className="flex gap-1">
                   <button title="View / print" onClick={() => setPreview(l)} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
-                  <button title="Edit" onClick={() => setForm({ ...l })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
+                  <button title="Edit" onClick={() => editLR(l)} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
                   <button title="Delete" onClick={() => setDel(l)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
                   <button title="Download PDF" onClick={() => { void downloadLR(l, vehicle(l.vehicleId), driver(l.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
@@ -103,44 +109,38 @@ export default function LRPage() {
       {/* form */}
       <Modal open={!!form} onClose={() => setForm(null)} title={`LR ${form?.lrNo || ""}`} wide>
         {form && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Field label="LR Number" hint="Auto-generated sequential"><Input value={form.lrNo} onChange={(e) => setForm({ ...form, lrNo: e.target.value })} /></Field>
-            <Field label="Date" required><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></Field>
-            <Field label="Vehicle" required><Select value={form.vehicleId} onChange={(e) => { const v = db.vehicles.find((x) => x.id === e.target.value); setForm({ ...form, vehicleId: e.target.value, driverId: v?.driverId || form.driverId }); }}>
-              <option value="">Select vehicle</option>{db.vehicles.map((v) => <option key={v.id} value={v.id}>{v.regNo} — {v.status}</option>)}</Select></Field>
-            <Field label="Consignor Name" required hint="Pick a saved customer to auto-fill the address">
-              <Input list="lr-consignors" value={form.consignor} placeholder="Search / type consignor"
-                onChange={(e) => { const c = db.customers.find((x) => x.name === e.target.value); setForm({ ...form, consignor: e.target.value, consignorAddr: c?.address || form.consignorAddr }); }} />
-              <datalist id="lr-consignors">{db.customers.map((c) => <option key={c.id} value={c.name} />)}</datalist>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="L.R. No." required><Input value={form.lrNo} onChange={(e) => setForm({ ...form, lrNo: e.target.value })} /></Field>
+            <Field label="Date"><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></Field>
+            <Field label="From"><Input value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} /></Field>
+            <Field label="To"><Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} /></Field>
+            <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+              <p className="text-xs font-bold text-gray-500 uppercase">Consignor (left side)</p>
+              <Field label="Name" required>
+                <Input list="lr-consignors" value={form.consignor} placeholder="Type consignor"
+                  onChange={(e) => { const c = db.customers.find((x) => x.name === e.target.value); setForm({ ...form, consignor: e.target.value, consignorAddr: c?.address || form.consignorAddr }); }} />
+                <datalist id="lr-consignors">{db.customers.map((c) => <option key={c.id} value={c.name} />)}</datalist>
+              </Field>
+              <Field label="Address (optional)"><Input value={form.consignorAddr} onChange={(e) => setForm({ ...form, consignorAddr: e.target.value })} /></Field>
+            </div>
+            <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+              <p className="text-xs font-bold text-gray-500 uppercase">Consignee (right side)</p>
+              <Field label="Name" required>
+                <Input list="lr-consignees" value={form.consignee} placeholder="Type consignee"
+                  onChange={(e) => { const c = db.customers.find((x) => x.name === e.target.value); setForm({ ...form, consignee: e.target.value, consigneeAddr: c?.address || form.consigneeAddr }); }} />
+                <datalist id="lr-consignees">{db.customers.map((c) => <option key={c.id} value={c.name} />)}</datalist>
+              </Field>
+              <Field label="Address (optional)"><Input value={form.consigneeAddr} onChange={(e) => setForm({ ...form, consigneeAddr: e.target.value })} /></Field>
+            </div>
+            <Field label="Vehicle No." required hint="Pick from your vehicles — type and details fill automatically">
+              <Input list="lr-vehicles" value={vehTxt} placeholder="MH43BP8494" onChange={(e) => setVehTxt(e.target.value.toUpperCase())} />
+              <datalist id="lr-vehicles">{db.vehicles.map((v) => <option key={v.id} value={v.regNo} />)}</datalist>
             </Field>
-            <Field label="Consignor Address"><Input value={form.consignorAddr} onChange={(e) => setForm({ ...form, consignorAddr: e.target.value })} /></Field>
-            <Field label="Consignee Name" required hint="Pick a saved customer to auto-fill the address">
-              <Input list="lr-consignees" value={form.consignee} placeholder="Search / type consignee"
-                onChange={(e) => { const c = db.customers.find((x) => x.name === e.target.value); setForm({ ...form, consignee: e.target.value, consigneeAddr: c?.address || form.consigneeAddr }); }} />
-              <datalist id="lr-consignees">{db.customers.map((c) => <option key={c.id} value={c.name} />)}</datalist>
-            </Field>
-            <Field label="Consignee Address"><Input value={form.consigneeAddr} onChange={(e) => setForm({ ...form, consigneeAddr: e.target.value })} /></Field>
-            <Field label="From" required><Input value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} /></Field>
-            <Field label="To" required><Input value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} /></Field>
-            <Field label="Nature of Goods"><Input value={form.goods} onChange={(e) => setForm({ ...form, goods: e.target.value })} placeholder="Chemical Oil / Bulk Cargo" /></Field>
-            <Field label="Quantity"><Input value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="24 KL" /></Field>
-            <Field label="Gross Weight (kg)"><Input value={form.gross} onChange={(e) => setForm({ ...form, gross: e.target.value, net: String(Number(e.target.value || 0) - Number(form.tare || 0)) })} /></Field>
-            <Field label="Tare Weight (kg)"><Input value={form.tare} onChange={(e) => setForm({ ...form, tare: e.target.value, net: String(Number(form.gross || 0) - Number(e.target.value || 0)) })} /></Field>
-            <Field label="Net Weight (kg)" hint="Auto-calculated"><Input value={form.net} onChange={(e) => setForm({ ...form, net: e.target.value })} /></Field>
-            <Field label="Freight as per Contract (₹)"><Input value={form.freight} onChange={(e) => setForm({ ...form, freight: e.target.value })} /></Field>
-            <Field label="Value Declared"><Select value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })}><option>Not Declared</option><option>Declared</option></Select></Field>
-            <Field label="BE / Invoice Number"><Input value={form.beNo} onChange={(e) => setForm({ ...form, beNo: e.target.value })} /></Field>
-            <Field label="Reporting Date &amp; Time"><Input type="datetime-local" value={form.reportingDT} onChange={(e) => setForm({ ...form, reportingDT: e.target.value })} /></Field>
-            <Field label="Unloading Date &amp; Time"><Input type="datetime-local" value={form.unloadingDT} onChange={(e) => setForm({ ...form, unloadingDT: e.target.value })} /></Field>
-            <Field label="Start Kilometre"><Input value={form.startKm} onChange={(e) => setForm({ ...form, startKm: e.target.value })} /></Field>
-            <Field label="Driver"><Select value={form.driverId} onChange={(e) => setForm({ ...form, driverId: e.target.value })}><option value="">Auto (from vehicle)</option>{db.drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></Field>
-            <div className="sm:col-span-2 lg:col-span-3 flex flex-wrap items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-              <span className="text-xs text-gray-600">Draft can be edited any time. Finalising locks the LR for printing (still re-editable by Admin) and writes an audit entry.</span>
-              <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button>
-                <Button variant="secondary" onClick={() => save(false)}><FileText className="w-4 h-4" /> Save Draft</Button>
-                <Button onClick={() => save(true)}><CheckCircle2 className="w-4 h-4" /> Finalise</Button>
-              </div>
+            <Field label="Nature of Goods"><Input value={form.goods} onChange={(e) => setForm({ ...form, goods: e.target.value })} placeholder="IPA" /></Field>
+            <Field label="N. Wt." className="sm:col-span-2"><Input value={form.net} onChange={(e) => setForm({ ...form, net: e.target.value })} placeholder="26,940" /></Field>
+            <div className="sm:col-span-2 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button>
+              <Button onClick={save}><CheckCircle2 className="w-4 h-4" /> Save LR</Button>
             </div>
           </div>
         )}
@@ -155,7 +155,7 @@ export default function LRPage() {
               <Button variant="secondary" onClick={() => downloadLR(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
               <Button variant="secondary" onClick={() => shareWhatsApp(preview)}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
               <Button variant="secondary" onClick={() => shareEmail(preview)}><Mail className="w-4 h-4" /> Email</Button>
-              <Button variant="secondary" onClick={() => setForm({ ...preview })}><Pencil className="w-4 h-4" /> Edit</Button>
+              <Button variant="secondary" onClick={() => editLR(preview)}><Pencil className="w-4 h-4" /> Edit</Button>
             </div>
             <div ref={printRef}><LRPreview lr={preview} vehicle={vehicle(preview.vehicleId)} driver={driver(preview.driverId)} firm={firm} /></div>
           </div>
