@@ -26,14 +26,14 @@ import Tracking from "./pages/Tracking";
 import Admin from "./pages/Admin";
 import DriverPortal from "./pages/DriverPortal";
 
-export const NAV: { key: string; label: string; hi?: string; icon: typeof Truck; core?: boolean }[] = [
-  { key: "dashboard", label: "Home", hi: "होम", icon: LayoutDashboard, core: true },
-  { key: "lr", label: "LR", hi: "LR", icon: ReceiptText, core: true },
-  { key: "tcc", label: "TCC", hi: "TCC", icon: Droplets, core: true },
-  { key: "vehicles", label: "Vehicles", hi: "गाड़ियाँ", icon: Truck, core: true },
-  { key: "drivers", label: "Drivers", hi: "ड्राइवर", icon: Users, core: true },
-  { key: "tracking", label: "Live Location", hi: "लोकेशन", icon: MapPin, core: true },
-  { key: "expiry", label: "Papers & Expiry", hi: "कागज़ात", icon: CalendarClock },
+export const NAV: { key: string; label: string; icon: typeof Truck; core?: boolean }[] = [
+  { key: "dashboard", label: "Home", icon: LayoutDashboard, core: true },
+  { key: "lr", label: "LR", icon: ReceiptText, core: true },
+  { key: "tcc", label: "TCC", icon: Droplets, core: true },
+  { key: "vehicles", label: "Vehicles", icon: Truck, core: true },
+  { key: "drivers", label: "Drivers", icon: Users, core: true },
+  { key: "tracking", label: "Live location", icon: MapPin, core: true },
+  { key: "expiry", label: "Papers & Expiry", icon: CalendarClock },
   { key: "documents", label: "Vehicle Papers", icon: FileText },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "assignments", label: "Assignments", icon: Link2 },
@@ -127,20 +127,20 @@ function Shell() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-[#eef1f4]">
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-green-950 text-green-50 transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-60 bg-green-950 text-white transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
         <div className="px-4 py-4 border-b border-green-900 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-green-600 flex items-center justify-center font-black text-white">AH</div>
+          <div className="w-10 h-10 rounded-md bg-signal flex items-center justify-center font-display font-bold text-lg text-slate-900">AH</div>
           <div className="min-w-0">
-            <p className="font-bold text-sm leading-tight truncate">A.H. TRANSPORT CO.</p>
-            <p className="text-[10px] text-green-300 truncate">TMS · Chembur, Mumbai</p>
+            <p className="font-display font-bold text-lg leading-tight truncate">{firm.display}</p>
+            <p className="text-xs text-slate-300 truncate">Fleet management</p>
           </div>
           <button className="lg:hidden ml-auto" onClick={() => setSidebar(false)}><X className="w-5 h-5" /></button>
         </div>
         {user?.role !== "Driver" && (
           <div className="px-3 py-2 border-b border-green-900">
-            <label className="block text-[10px] uppercase tracking-wide text-green-300 mb-1">Firm</label>
+            <label className="block text-xs text-slate-300 mb-1">Company</label>
             <select value={firm.id} onChange={(e) => { switchFirm(e.target.value); setPage("dashboard"); }}
               className="w-full rounded-md bg-green-900 text-white text-sm font-semibold px-2 py-1.5 border border-green-700 focus:outline-none">
               {firms.map((f) => <option key={f.id} value={f.id}>{f.display}</option>)}
@@ -154,13 +154,13 @@ function Shell() {
             const activeItem = page === n.key;
             return (
               <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-base transition ${activeItem ? "bg-green-800 text-white font-semibold border-r-4 border-green-400" : "text-green-100 hover:bg-green-900"}`}>
-                <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{n.label}</span>{n.hi && n.hi !== n.label && <span className="ml-auto text-xs text-green-300">{n.hi}</span>}
+                className={`w-full flex items-center gap-3 pl-5 pr-4 py-3 text-base transition border-l-4 ${activeItem ? "bg-green-900 text-white font-semibold border-signal" : "border-transparent text-slate-300 hover:bg-green-900/60 hover:text-white"}`}>
+                <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{n.label}</span>
               </button>
             );
           })}
           <details className="mt-2 border-t border-green-900" open={more.some((n) => n.key === page)}>
-            <summary className="px-4 py-3 text-sm text-green-300 cursor-pointer select-none">More / और</summary>
+            <summary className="px-5 py-3 text-sm text-slate-300 cursor-pointer select-none hover:text-white">More</summary>
             {more.map((n) => {
               const Icon = n.icon;
               const activeItem = page === n.key;
@@ -183,10 +183,11 @@ function Shell() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-300/70">
+          <div className="hazard" />
           <div className="flex items-center gap-2 px-3 sm:px-5 py-2.5">
             <button className="lg:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setSidebar(true)}><Menu className="w-5 h-5" /></button>
-            <div className="hidden md:block font-semibold text-gray-800">{user.role === "Driver" ? "Driver App" : (TITLES[page] || "Dashboard")}</div>
+            <div className="hidden md:block font-display font-semibold text-lg text-slate-900">{user.role === "Driver" ? "Driver app" : (TITLES[page] || "Home")}</div>
             <div className="relative ml-auto w-40 sm:w-72">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
               <input value={globalQ} onChange={(e) => setGlobalQ(e.target.value)} placeholder="Search vehicle, driver, LR…"
@@ -256,8 +257,8 @@ function Shell() {
       {user.role !== "Driver" && (
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 grid grid-cols-6 no-print">
           {core.map((n) => { const Icon = n.icon; const on = page === n.key; return (
-            <button key={n.key} onClick={() => setPage(n.key)} className={`flex flex-col items-center gap-0.5 py-2 ${on ? "text-green-700" : "text-gray-500"}`}>
-              <Icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} /><span className="text-[10px] font-semibold leading-none">{n.hi || n.label}</span>
+            <button key={n.key} onClick={() => setPage(n.key)} className={`flex flex-col items-center gap-0.5 py-2 border-t-4 ${on ? "border-signal text-green-900" : "border-transparent text-slate-500"}`}>
+              <Icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} /><span className="text-[11px] font-semibold leading-none">{n.key === "tracking" ? "Live" : n.label}</span>
             </button>); })}
         </nav>
       )}

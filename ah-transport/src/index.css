@@ -1,5 +1,19 @@
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/600.css";
+@import "@fontsource/barlow-semi-condensed/600.css";
+@import "@fontsource/barlow-semi-condensed/700.css";
 @import "tailwindcss";
 @theme {
+  --font-display: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  /* strong "brand" shades become tanker-steel navy; light tints stay green for success states */
+  --color-green-600: #2a6aa8;
+  --color-green-700: #1d4f80;
+  --color-green-800: #153d66;
+  --color-green-900: #0f2e4d;
+  --color-green-950: #0a2036;
+  --color-signal: #ffc20e;
+  --color-signal-dark: #e6ac00;
   --color-brand-50: #f0fdf4;
   --color-brand-100: #dcfce7;
   --color-brand-600: #16a34a;
@@ -9,7 +23,11 @@
   --color-brand-950: #052e16;
 }
 html,body,#root{height:100%}
-body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f4f6;color:#111827}
+body{font-family:Barlow,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#eef1f4;color:#0f1b2a;font-size:15px}
+h1,h2,h3,.font-display{font-family:var(--font-display);letter-spacing:.005em}
+.hazard{height:6px;background:repeating-linear-gradient(-45deg,#ffc20e 0 10px,#0a2036 10px 20px)}
+table{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid #ffc20e;outline-offset:2px}
 *{-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
