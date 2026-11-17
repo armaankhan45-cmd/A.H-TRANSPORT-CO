@@ -155,7 +155,9 @@ export async function pushChanges(prev: DB, next: DB, userId?: string): Promise<
       if (old && !changed(old, item)) continue;
       const row = c.toRow(await toPath(item, c.key, patches));
       if (!old) {
-        if (c.seq) {                                   // server hands out LR/TCC/TRIP numbers atomically
+        const typed = String(item[c.seq?.field || ""] || "").trim();
+        const custom = !!typed && !/^(LR|TCC|TRIP)\/\d+$/i.test(typed);   // a number the user typed by hand is kept as is
+        if (c.seq && !custom) {                        // server hands out LR/TCC/TRIP numbers atomically
           const firm = item.firm || "ah-transport";
           const no = await nextDocumentNo(c.seq.prefix, firm);
           row[c.seq.col] = no;
