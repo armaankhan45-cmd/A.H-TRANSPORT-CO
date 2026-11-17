@@ -59,3 +59,9 @@ main .grid > *{min-width:0}              /* let grid cards shrink instead of pus
 
 /* Bookman-style bold used for the printed letterhead on LR / TCC (TeX Gyre Bonum, GUST Font License - free to embed) */
 @font-face { font-family: "AH Bookman"; src: url("/fonts/texgyrebonum-bold.otf") format("opentype"); font-weight: 400 900; font-style: normal; font-display: block; }
+
+/* iPhone: keep content clear of the notch / status bar and the home bar */
+header.sticky{padding-top:env(safe-area-inset-top)}
+nav.fixed.bottom-0{padding-bottom:env(safe-area-inset-bottom)}
+@media (max-width:1023px){ main{padding-bottom:calc(6rem + env(safe-area-inset-bottom)) !important} }
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
