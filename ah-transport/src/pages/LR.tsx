@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { takeNew } from "../launch";
+import { lrVehicleNo, lrValueText, packLR, normReg } from "../lrExtra";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
@@ -33,8 +34,7 @@ export default function LRPage() {
   };
 
   const [vehTxt, setVehTxt] = useState("");
-  const norm = (x: string) => x.replace(/[\s-]/g, "").toUpperCase();
-  const editLR = (l: LR) => { setPreview(null); setVehTxt(db.vehicles.find((v) => v.id === l.vehicleId)?.regNo || ""); setForm({ ...l }); };
+  const editLR = (l: LR) => { setPreview(null); setVehTxt(lrVehicleNo(l, db.vehicles.find((v) => v.id === l.vehicleId)?.regNo)); setForm({ ...l }); };
 
   useEffect(() => { if (takeNew()) newLR(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -42,17 +42,18 @@ export default function LRPage() {
     if (!form) return;
     if (!form.lrNo.trim()) return toast("Enter the LR number", "error");
     if (!form.consignor.trim() || !form.consignee.trim()) return toast("Consignor and consignee are required", "error");
-    const veh = db.vehicles.find((v) => norm(v.regNo) === norm(vehTxt));
-    if (!veh) return toast(vehTxt.trim() ? `Vehicle ${vehTxt.trim()} is not in your vehicle list — add it in Vehicles first` : "Select the vehicle number", "error");
-    if (veh.status === "Under Maintenance" && !form.id) return toast("Vehicle is under maintenance and cannot be loaded for a new LR without an admin override.", "error");
-    const rec: LR = { ...form, vehicleId: veh.id, driverId: form.driverId || veh.driverId || "", status: "Final" };
+    if (!vehTxt.trim()) return toast("Type the vehicle number", "error");
+    const veh = db.vehicles.find((v) => normReg(v.regNo) === normReg(vehTxt));
+    if (veh?.status === "Under Maintenance" && !form.id) return toast("Vehicle is under maintenance and cannot be loaded for a new LR without an admin override.", "error");
+    if (db.lrs.some((x) => x.id !== form.id && x.lrNo.trim().toLowerCase() === form.lrNo.trim().toLowerCase())) return toast(`LR ${form.lrNo} already exists`, "error");
+    const rec: LR = { ...form, vehicleId: veh?.id || "", driverId: form.driverId || veh?.driverId || "", value: packLR(form, vehTxt.trim().toUpperCase()), status: "Final" };
     set((d) => {
       if (form.id) {
         const i = d.lrs.findIndex((x) => x.id === form.id);
         if (i >= 0) d.lrs[i] = rec;
       } else {
         d.lrs.push({ ...rec, id: uid() });
-        d.seq.lr += 1;
+        if (/^LR\/\d+$/i.test(rec.lrNo.trim())) d.seq.lr += 1;
       }
       d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: form.id ? "LR edited" : "LR created", detail: `${rec.lrNo} — ${rec.consignor} → ${rec.consignee}` });
     });
@@ -64,11 +65,11 @@ export default function LRPage() {
   const driver = (id: string) => db.drivers.find((d) => d.id === id);
 
   const shareWhatsApp = (lr: LR) => {
-    const text = `*A.H. TRANSPORT CO.*%0ALR No: ${lr.lrNo}%0ADate: ${fmtDate(lr.date)}%0AFrom: ${lr.from} → To: ${lr.to}%0AConsignor: ${lr.consignor}%0AConsignee: ${lr.consignee}%0AVehicle: ${vehicle(lr.vehicleId)?.regNo || ""}%0AGoods: ${lr.goods} (${lr.quantity})%0ANet Wt: ${lr.net} kg%0AFreight: Rs. ${lr.freight}%0A${lr.status === "Final" ? "Download the PDF and attach it here." : "DRAFT — not finalised"}`;
+    const text = `*A.H. TRANSPORT CO.*%0ALR No: ${lr.lrNo}%0ADate: ${fmtDate(lr.date)}%0AFrom: ${lr.from} → To: ${lr.to}%0AConsignor: ${lr.consignor}%0AConsignee: ${lr.consignee}%0AVehicle: ${lrVehicleNo(lr, vehicle(lr.vehicleId)?.regNo)}%0AGoods: ${lr.goods} (${lr.quantity})%0ANet Wt: ${lr.net} kg%0AFreight: Rs. ${lr.freight}%0A${lr.status === "Final" ? "Download the PDF and attach it here." : "DRAFT — not finalised"}`;
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
   const shareEmail = (lr: LR) => {
-    window.location.href = `mailto:?subject=${encodeURIComponent(`A.H. Transport Co. LR ${lr.lrNo}`)}&body=${encodeURIComponent(`LR No: ${lr.lrNo}\nDate: ${fmtDate(lr.date)}\nConsignor: ${lr.consignor}\nConsignee: ${lr.consignee}\nVehicle: ${vehicle(lr.vehicleId)?.regNo}\nFreight: Rs ${lr.freight}\n\nPlease find the PDF attached (download from the app).`)}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(`A.H. Transport Co. LR ${lr.lrNo}`)}&body=${encodeURIComponent(`LR No: ${lr.lrNo}\nDate: ${fmtDate(lr.date)}\nConsignor: ${lr.consignor}\nConsignee: ${lr.consignee}\nVehicle: ${lrVehicleNo(lr, vehicle(lr.vehicleId)?.regNo)}\nFreight: Rs ${lr.freight}\n\nPlease find the PDF attached (download from the app).`)}`;
   };
   const doPrint = () => { if (!printCanvas(printRef.current, "LR", LR_W, LR_H)) toast("Allow pop-ups to print", "error"); };
 
@@ -92,7 +93,7 @@ export default function LRPage() {
               <td className="px-3 py-2 text-xs">{fmtDate(l.date)}</td>
               <td className="px-3 py-2 text-xs max-w-52"><span className="block truncate">{l.consignor}</span><span className="block truncate text-gray-500">→ {l.consignee}</span></td>
               <td className="px-3 py-2 text-xs">{l.from} → {l.to}</td>
-              <td className="px-3 py-2 text-xs font-semibold">{vehicle(l.vehicleId)?.regNo || "—"}</td>
+              <td className="px-3 py-2 text-xs font-semibold">{lrVehicleNo(l, vehicle(l.vehicleId)?.regNo) || "—"}</td>
               <td className="px-3 py-2 text-xs">{l.goods}<span className="block text-[10px] text-gray-500">{l.quantity}</span></td>
               <td className="px-3 py-2 text-xs">{fmtINR(Number(l.freight || 0))}</td>
               <td className="px-3 py-2"><Badge cls={l.status === "Final" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-700"}>{l.status}</Badge></td>
@@ -135,7 +136,7 @@ export default function LRPage() {
               </Field>
               <Field label="Address (optional)"><Input value={form.consigneeAddr} onChange={(e) => setForm({ ...form, consigneeAddr: e.target.value })} /></Field>
             </div>
-            <Field label="Vehicle No." required hint="Pick from your vehicles — type and details fill automatically">
+            <Field label="Vehicle No." required hint="Just type the number">
               <Input list="lr-vehicles" value={vehTxt} placeholder="MH43BP8494" onChange={(e) => setVehTxt(e.target.value.toUpperCase())} />
               <datalist id="lr-vehicles">{db.vehicles.map((v) => <option key={v.id} value={v.regNo} />)}</datalist>
             </Field>

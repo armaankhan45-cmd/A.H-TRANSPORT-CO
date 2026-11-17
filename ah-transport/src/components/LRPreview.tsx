@@ -1,6 +1,7 @@
 import type { Firm } from "../company";
 import type { LR, Vehicle, Driver } from "../types";
 import logo from "../assets/logo-lr.png";
+import { lrVehicleNo, lrValueText } from "../lrExtra";
 import { Box, H, ScaledCanvas, SERIF, T, V, Vl, at, fmtDMY, fmtDT } from "./formKit";
 
 export const LR_W = 1600, LR_H = 1267;
@@ -85,12 +86,12 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
       <V x={700} y={728} w={210} size={24} align="center">{lr.gross}</V>
       <V x={700} y={790} w={210} size={24} align="center">{lr.tare}</V>
       <V x={700} y={905} w={210} size={40} align="center">{lr.net}</V>
-      <V x={60} y={790} w={225} size={32} align="center">{vehicle?.regNo}</V>
+      <V x={60} y={790} w={225} size={32} align="center">{lrVehicleNo(lr, vehicle?.regNo)}</V>
       <V x={300} y={770} w={375} size={52} align="center" style={{ whiteSpace: "normal", lineHeight: "56px" }}>{lr.goods}</V>
       {lr.quantity && <V x={300} y={720} w={375} size={20} bold={false} align="center">{lr.quantity}</V>}
       <T x={305} y={909} size={22}>Value :</T>
       <H x={372} y={929} w={148} t={1.5} />
-      <V x={378} y={898} w={140} size={24}>{lr.value}</V>
+      <V x={378} y={898} w={140} size={24}>{lrValueText(lr)}</V>
       <T x={305} y={936} size={22}>Declared / not declared.</T>
       {/* declaration */}
       <T x={1068} y={705} size={17.5} bold ls={3.3}>DECLARATION FOR CENVAT / CREDIT</T>
