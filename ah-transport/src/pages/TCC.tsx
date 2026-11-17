@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { takeNew } from "../launch";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Textarea, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
@@ -25,6 +26,8 @@ export default function TCCPage() {
   const blank = (): TF => ({ id: "", tccNo: nextSeq("TCC", db.seq.tcc), date: todayISO(), party: "", addr: "", material: "", vehicleNo: "", onBehalf: "", prevCargo: "", driverName: "" });
   const toForm = (t: TCC): TF => { const x = readExtra(t); return { id: t.id, tccNo: t.tccNo, date: t.date, party: t.recipient, addr: t.recipientAddr, material: x.material, vehicleNo: x.vehicleNo || vehicle(t.vehicleId)?.regNo || "", onBehalf: t.onBehalf, prevCargo: t.prevCargo, driverName: x.driverName || driver(t.driverId)?.name || "" }; };
   const editTCC = (t: TCC) => { setPreview(null); setTf(toForm(t)); };
+
+  useEffect(() => { if (takeNew()) setTf(blank()); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = () => {
     if (!tf) return;

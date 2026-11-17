@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { takeNew } from "../launch";
 import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
@@ -34,6 +35,8 @@ export default function LRPage() {
   const [vehTxt, setVehTxt] = useState("");
   const norm = (x: string) => x.replace(/[\s-]/g, "").toUpperCase();
   const editLR = (l: LR) => { setPreview(null); setVehTxt(db.vehicles.find((v) => v.id === l.vehicleId)?.regNo || ""); setForm({ ...l }); };
+
+  useEffect(() => { if (takeNew()) newLR(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = () => {
     if (!form) return;

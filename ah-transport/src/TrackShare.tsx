@@ -84,40 +84,38 @@ export default function TrackShare({ token }: { token: string }) {
 
   const stopNow = async () => { halt(); try { localStorage.removeItem(flag); } catch { /* ignore */ } await stop(token); setPhase("stopped"); };
 
+  const big = "w-full rounded-2xl text-white font-extrabold py-5 text-2xl leading-tight active:scale-[0.98] transition";
   return (
     <div className="min-h-screen bg-green-50 grid place-items-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg border border-green-100 p-5 text-center">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
         <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
-        {info === undefined && <p className="py-10 text-sm text-gray-500">Loading…</p>}
-        {info === null && <div className="py-8"><p className="font-semibold">This link is not active</p><p className="text-sm text-gray-500 mt-2">Ask the office to send you a new link.</p></div>}
+        {info === undefined && <p className="py-10 text-lg text-gray-500">…</p>}
+        {info === null && <div className="py-8"><p className="text-lg font-bold">यह लिंक चालू नहीं है</p><p className="text-sm text-gray-500 mt-2">This link is not active. Ask the office for a new link.</p></div>}
         {info && (
           <>
-            <div className="mx-auto my-4 w-14 h-14 rounded-full bg-green-100 grid place-items-center">{phase === "sharing" ? <MapPin className="w-7 h-7 text-green-700" /> : <ShieldCheck className="w-7 h-7 text-green-700" />}</div>
-            <h1 className="text-lg font-bold">Hello {info.name.split(" ")[0]}</h1>
-            {info.vehicle && <p className="text-sm text-gray-500">Vehicle {info.vehicle}</p>}
+            <div className={`mx-auto my-5 w-24 h-24 rounded-full grid place-items-center ${phase === "sharing" ? "bg-green-600" : "bg-green-100"}`}>
+              <MapPin className={`w-12 h-12 ${phase === "sharing" ? "text-white" : "text-green-700"}`} />
+            </div>
+            <p className="text-xl font-bold">{info.name.split(" ")[0]}{info.vehicle ? ` · ${info.vehicle}` : ""}</p>
 
             {phase === "ask" && (<>
-              <p className="text-sm text-gray-700 mt-3">The office would like to see where your truck is during trips.</p>
-              <ul className="text-xs text-gray-600 text-left mt-3 space-y-1.5 bg-gray-50 rounded-lg p-3">
-                <li>• Your location is shared <b>only after you tap Allow</b>.</li>
-                <li>• Only your position is shared — nothing else on your phone.</li>
-                <li>• Keep this page open while driving.</li>
-                <li>• You can tap <b>Stop sharing</b> any time; your saved locations are deleted.</li>
-              </ul>
-              <button onClick={start} className="mt-4 w-full rounded-xl bg-green-700 text-white font-semibold py-3 text-base active:bg-green-800">Allow &amp; share my location</button>
+              <p className="text-lg font-semibold mt-4 leading-snug">आपकी गाड़ी की लोकेशन ऑफिस को दिखेगी</p>
+              <p className="text-sm text-gray-500 mt-1">Office will see where your truck is</p>
+              <button onClick={start} className={`${big} bg-green-700 mt-6`}>चालू करें<span className="block text-base font-semibold opacity-90">ALLOW</span></button>
+              <p className="text-xs text-gray-500 mt-4 leading-relaxed">फ़ोन पूछे तो "Allow / अनुमति दें" दबाएं।<br />बंद करने के लिए कभी भी "बंद करें" दबाएं।</p>
             </>)}
 
             {phase === "sharing" && (<>
-              <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-green-700"><span className="w-2.5 h-2.5 rounded-full bg-green-600 animate-pulse" /> Sharing your location</p>
-              <p className="text-xs text-gray-500 mt-1">{lastSent ? `Last sent at ${lastSent}` : "Getting your position…"}</p>
-              {problem && <p className="text-xs text-amber-700 mt-2">{problem}</p>}
-              <p className="text-xs text-gray-500 mt-3">Keep this page open. Switching to another app may pause sharing.</p>
-              <button onClick={stopNow} className="mt-4 w-full rounded-xl border border-red-300 text-red-700 font-semibold py-3 flex items-center justify-center gap-2"><Square className="w-4 h-4" /> Stop sharing</button>
+              <p className="text-2xl font-extrabold text-green-700 mt-4">✓ लोकेशन चालू है</p>
+              <p className="text-sm text-gray-500 mt-1">Location is ON{lastSent ? ` · ${lastSent}` : ""}</p>
+              {problem && <p className="text-sm text-amber-700 mt-2">GPS का इंतज़ार… / Waiting for GPS</p>}
+              <p className="text-sm text-gray-600 mt-4 leading-relaxed">यह पेज खुला रखें<br /><span className="text-xs text-gray-500">Keep this page open</span></p>
+              <button onClick={stopNow} className={`${big} bg-red-600 mt-6`}>बंद करें<span className="block text-base font-semibold opacity-90">STOP</span></button>
             </>)}
 
-            {phase === "stopped" && <p className="mt-4 text-sm text-gray-700">Sharing stopped and your saved locations were deleted.<br /><button onClick={() => setPhase("ask")} className="mt-3 underline text-green-700 text-sm">Share again</button></p>}
-            {phase === "denied" && <p className="mt-4 text-sm text-red-700">Location permission was blocked. Allow location for this site in your phone/browser settings, then reload this page.</p>}
-            {phase === "nogps" && <p className="mt-4 text-sm text-red-700">This phone/browser cannot share location.</p>}
+            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">लोकेशन बंद हो गई</p><p className="text-sm text-gray-500">Stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>फिर से चालू करें</button></>}
+            {phase === "denied" && <><p className="mt-4 text-lg font-bold text-red-700">लोकेशन की अनुमति बंद है</p><p className="text-sm text-gray-600 mt-2">फ़ोन की Settings में इस साइट के लिए Location चालू करें, फिर यह पेज दोबारा खोलें।<br /><span className="text-xs text-gray-500">Allow location for this site in phone settings, then reopen.</span></p></>}
+            {phase === "nogps" && <p className="mt-4 text-lg font-bold text-red-700">इस फ़ोन में लोकेशन नहीं चल सकती</p>}
           </>
         )}
       </div>
