@@ -1,0 +1,31 @@
+name: Build Android app
+on:
+  workflow_dispatch:
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ah-transport
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ah-transport/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: mkdir -p dist && echo ok > dist/index.html   # the app loads the live website
+      - run: npx cap sync android
+      - run: ./gradlew assembleDebug
+        working-directory: ah-transport/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AH-Driver-apk
+          path: ah-transport/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

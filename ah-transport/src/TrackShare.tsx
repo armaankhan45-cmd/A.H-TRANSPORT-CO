@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, ShieldCheck, Square } from "lucide-react";
 import { COMPANY } from "./company";
 import { DATA_MODE, supabase } from "./lib/supabase";
+import { isNative, watchInBackground, stopBackground } from "./native";
 import { shrinkPhoto, submitReport, type ReportKind } from "./reports";
 
 /** Page a driver opens from the private link. No login. Nothing is sent until the driver taps Allow. */
@@ -90,6 +91,7 @@ export default function TrackShare({ token }: { token: string }) {
   const latest = useRef<GeolocationPosition | null>(null);
   const lastSentPos = useRef<GeolocationPosition | null>(null);
   const lastGood = useRef(0);
+  const bgId = useRef<string | null>(null);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
   const flag = `ah_track_ok_${token}`;
 
@@ -101,6 +103,15 @@ export default function TrackShare({ token }: { token: string }) {
   }, [token]);
 
   const start = useCallback(() => {
+    if (isNative()) {   // Android app: keeps working with the screen off
+      void watchInBackground((f) => {
+        const p = { coords: { latitude: f.latitude, longitude: f.longitude, accuracy: f.accuracy, speed: f.speed } } as unknown as GeolocationPosition;
+        latest.current = p; void push();
+      }, () => setPhase("denied")).then((id) => { bgId.current = id; });
+      try { localStorage.setItem(flag, "1"); } catch { /* ignore */ }
+      setPhase("sharing");
+      return;
+    }
     if (!navigator.geolocation) { setPhase("nogps"); return; }
     watch.current = navigator.geolocation.watchPosition(
       (p) => {
@@ -126,6 +137,7 @@ export default function TrackShare({ token }: { token: string }) {
   }, [push]);
 
   const halt = useCallback(() => {
+    if (bgId.current) { void stopBackground(bgId.current).catch(() => undefined); bgId.current = null; }
     if (watch.current != null) navigator.geolocation.clearWatch(watch.current);
     if (timer.current != null) clearInterval(timer.current);
     watch.current = null; timer.current = null; latest.current = null;

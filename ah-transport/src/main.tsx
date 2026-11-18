@@ -3,11 +3,17 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import TrackShare from './TrackShare.tsx'
+import DriverSetup from './DriverSetup.tsx'
+import { isNative, savedToken, saveToken } from './native'
 
-const trackToken = new URLSearchParams(location.search).get('track')
+const urlToken = new URLSearchParams(location.search).get('track')
+const trackToken = urlToken || (isNative() ? savedToken() : null)
+if (isNative() && urlToken) saveToken(urlToken)
+const root = createRoot(document.getElementById('root')!)
+const setup = (t: string) => { saveToken(t); location.href = '/?track=' + t }
 
-createRoot(document.getElementById('root')!).render(
+root.render(
   <StrictMode>
-    {trackToken ? <TrackShare token={trackToken} /> : <App />}
+    {trackToken ? <TrackShare token={trackToken} /> : isNative() ? <DriverSetup onToken={setup} /> : <App />}
   </StrictMode>,
 )
