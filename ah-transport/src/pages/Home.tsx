@@ -15,7 +15,8 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
   ].filter((x) => x.left <= nd).sort((a, b) => a.left - b.left);
 
   const lastBackup = (() => { try { return Number(localStorage.getItem("ah_last_backup")) || 0; } catch { return 0; } })();
-  const backupDue = Date.now() - lastBackup > 7 * 86400000;
+  const snooze = (() => { try { return Number(localStorage.getItem("ah_bk_snooze")) || 0; } catch { return 0; } })();
+  const backupDue = Date.now() - lastBackup > 7 * 86400000 && Date.now() > snooze;
   const go = (page: string, isNew = false) => () => { if (isNew) askNew(); onNavigate(page); };
   const links = [
     { page: "vehicles", label: "Vehicles", n: `${db.vehicles.length}`, icon: Truck },
@@ -31,9 +32,10 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
 
       <InstallApp />
       {backupDue && (
-        <button onClick={go("admin")} className="w-full text-left rounded-lg border-2 border-signal bg-signal/10 p-3 mb-4 font-semibold">
-          Backup due. Tap to download a copy of all your records.
-        </button>
+        <div className="flex gap-2 rounded-lg border-2 border-signal bg-signal/10 p-3 mb-4 font-semibold items-center">
+          <button onClick={go("admin")} className="flex-1 text-left">Backup due. Tap to download a copy of all your records.</button>
+          <button aria-label="Hide for 3 days" onClick={() => { try { localStorage.setItem("ah_bk_snooze", String(Date.now() + 3 * 86400000)); } catch { /* ignore */ } location.reload(); }} className="px-2 text-xl">×</button>
+        </div>
       )}
 
       <div className="grid lg:grid-cols-5 gap-6">

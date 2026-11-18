@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import logoDark from "./assets/app-logo-dark.png";
 import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
 import { CONFIG_ERROR } from "./lib/supabase";
@@ -11,6 +11,7 @@ import { Badge, Button } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import { newCount } from "./reports";
 import DriverReports from "./pages/DriverReports";
 import { askNew } from "./launch";
 import Vehicles from "./pages/Vehicles";
@@ -45,8 +46,8 @@ export const NAV: { key: string; label: string; icon: typeof Truck; core?: boole
   { key: "customers", label: "Customers", icon: Building2 },
   { key: "salary", label: "Salary", icon: Wallet },
   { key: "expenses", label: "Expenses", icon: IndianRupee },
-  { key: "reports", label: "Reports", icon: BarChart3 },
-  { key: "overview", label: "Detailed Dashboard", icon: BarChart3 },
+  { key: "reports", label: "Download reports", icon: BarChart3 },
+  { key: "overview", label: "Charts", icon: BarChart3 },
   { key: "admin", label: "Users & Settings", icon: ShieldCheck },
 ];
 
@@ -59,6 +60,8 @@ function Shell() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [globalQ, setGlobalQ] = useState("");
 
+  const [newReports, setNewReports] = useState(0);
+  useEffect(() => { const f = () => { void newCount().then(setNewReports); }; f(); const t = setInterval(f, 30000); return () => clearInterval(t); }, []);
   const notifications = useMemo(() => {
     const out: { title: string; sub: string; tone: string; page: string }[] = [];
     const nd = db.settings.notifyDays || 30;
@@ -173,6 +176,7 @@ function Shell() {
                 <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${activeItem ? "bg-green-800 text-white font-semibold" : "text-green-100 hover:bg-green-900"}`}>
                   <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{n.label}</span>
+                  {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
                   {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
                 </button>
               );
@@ -212,7 +216,7 @@ function Shell() {
             <div className="relative">
               <button onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-gray-100">
                 <Bell className="w-5 h-5 text-gray-600" />
-                {notifications.length > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{notifications.length > 99 ? "99+" : notifications.length}</span>}
+                {notifications.length > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{notifications.length > 9 ? "9+" : notifications.length}</span>}
               </button>
               {notifOpen && (
                 <div className="absolute right-0 mt-1 w-80 sm:w-96 bg-white border border-gray-200 rounded-xl shadow-2xl z-40 max-h-[70vh] overflow-y-auto">
@@ -246,7 +250,7 @@ function Shell() {
           </div>
         </header>
 
-        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{!CLOUD && <div className="mb-3 rounded-md border border-amber-400 bg-amber-50 p-3 text-sm text-amber-900"><b>Demo mode.</b> Data here is sample data saved only in this browser. To make this the real app, add the Supabase settings in Vercel (VITE_DATA_MODE=supabase, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY) and redeploy.</div>}{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
+        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{!CLOUD && <div className="mb-2 rounded border border-amber-400 bg-amber-50 px-2 py-1 text-xs text-amber-900"><b>Demo mode</b> — sample data only. Real app needs the Supabase settings in Vercel.</div>}{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
           <span>{firm.name} — {firm.address}</span>
           {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}

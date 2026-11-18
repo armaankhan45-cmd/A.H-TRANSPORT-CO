@@ -54,6 +54,8 @@ main .grid > *{min-width:0}              /* let grid cards shrink instead of pus
   .rtable td[data-label="Actions"] button,.rtable td[data-label="Actions"] a{min-width:38px;min-height:38px}
   .rtable td > *{min-width:0}
   .rtable td[colspan]{display:block;text-align:center}
+  .rtable td[data-label^="Consignor"]{flex-direction:column;align-items:flex-start;gap:4px;text-align:left}
+  .rtable td[data-label^="Consignor"]::before{max-width:none}
 }
 @media (max-width:767px){ .rtable td .truncate,.rtable td.truncate{white-space:normal;overflow:visible;text-overflow:clip} .rtable td [class*="max-w-"]{max-width:none} }
 

@@ -38,7 +38,12 @@ export function Field({ label, children, required, hint, className = "" }: { lab
   );
 }
 const inputCls = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-green-700 focus:ring-2 focus:ring-signal/60";
-export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) { return <input {...p} className={`${inputCls} ${p.className || ""}`} />; }
+export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) {
+  const el = <input {...p} className={`${inputCls} ${p.className || ""}`} />;
+  if (p.type !== "date") return el;
+  const d = p.value ? new Date(String(p.value)) : null;   // phones show dates in the US order: spell it out so nobody mixes up day and month
+  return <div>{el}{d && !isNaN(d.getTime()) && <p className="text-xs font-semibold text-gray-600 mt-1">{d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>}</div>;
+}
 export function Textarea(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...p} className={`${inputCls} ${p.className || ""}`} />; }
 export function Select({ children, ...p }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
@@ -164,7 +169,7 @@ export function Stat({ label, value, icon, tone = "green", sub }: { label: strin
     <Card className="p-4">
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 truncate">{label}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 leading-tight">{label}</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
           {sub && <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>}
         </div>
