@@ -1,0 +1,6 @@
+{
+  "appId": "com.ahtransport.driver",
+  "appName": "AH Driver",
+  "webDir": "dist",
+  "server": { "url": "https://a-h-transport-co.vercel.app/?app=1", "cleartext": false }
+}

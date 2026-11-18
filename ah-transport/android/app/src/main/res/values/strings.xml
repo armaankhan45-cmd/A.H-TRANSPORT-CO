@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AH Driver</string>
+    <string name="title_activity_main">AH Driver</string>
+    <string name="package_name">com.ahtransport.driver</string>
+    <string name="custom_url_scheme">com.ahtransport.driver</string>
+</resources>
