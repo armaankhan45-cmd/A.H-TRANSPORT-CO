@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logoDark from "../assets/app-logo-dark.png";
 import { useStore, CLOUD } from "../store";
 import { COMPANY } from "../company";
 import { Button, Input, Field } from "../ui";
@@ -29,7 +30,7 @@ export default function Login() {
       <div className="hidden lg:flex flex-col justify-between bg-green-950 text-white p-10">
         <div>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center font-black text-xl">AH</div>
+            <div className="h-14 px-3 rounded-xl bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-8 w-auto" /></div>
             <div>
               <p className="font-bold text-lg leading-tight">{COMPANY.name}</p>
               <p className="text-green-300 text-xs">{COMPANY.tagline}</p>
@@ -54,7 +55,7 @@ export default function Login() {
       <div className="flex items-center justify-center p-5">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-green-800 flex items-center justify-center font-black text-white">AH</div>
+            <div className="h-11 px-2.5 rounded-xl bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-7 w-auto" /></div>
             <div>
               <p className="font-bold text-sm text-gray-900">{COMPANY.name}</p>
               <p className="text-[11px] text-gray-500">Transport Management System</p>

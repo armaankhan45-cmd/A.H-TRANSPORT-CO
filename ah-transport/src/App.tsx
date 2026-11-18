@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import logoDark from "./assets/app-logo-dark.png";
 import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
 import { CONFIG_ERROR } from "./lib/supabase";
 import {
@@ -135,7 +136,7 @@ function Shell() {
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-60 bg-green-950 text-white transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
         <div className="px-4 py-4 border-b border-green-900 flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-md bg-signal flex items-center justify-center font-display font-bold text-lg text-slate-900">AH</div>
+          <div className="h-10 px-2 rounded-md bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-6 w-auto" /></div>
           <div className="min-w-0">
             <p className="font-display font-bold text-lg leading-tight truncate">{firm.display}</p>
             <p className="text-xs text-slate-300 truncate">Fleet management</p>
