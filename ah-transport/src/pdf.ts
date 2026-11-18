@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { toCanvas } from "html-to-image";
 import { createElement, type ReactElement } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -50,7 +50,10 @@ async function capture(el: ReactElement, w: number): Promise<HTMLCanvasElement> 
     await new Promise((r) => setTimeout(r, 120));
     const node = host.querySelector("[data-canvas]") as HTMLElement;
     await Promise.all([...host.querySelectorAll("img")].map((i) => i.decode().catch(() => undefined)));
-    return await html2canvas(node, { scale: 2, backgroundColor: "#fff", logging: false });
+    // The browser itself draws the text (exact positions), unlike html2canvas which shifts text.
+    const opts = { pixelRatio: 2, backgroundColor: "#fff", cacheBust: false, width: w, style: { transform: "none" } };
+    await toCanvas(node, opts).catch(() => undefined);   // first pass warms fonts/images (needed on iPhone Safari)
+    return await toCanvas(node, opts);
   } finally { root.unmount(); host.remove(); }
 }
 async function formDoc(el: ReactElement, w: number, h: number) {
