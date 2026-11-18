@@ -101,8 +101,8 @@ export default function Admin() {
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => {
                 const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
-                const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ah_tms_backup_${todayISO()}.json`; a.click(); toast("Backup JSON downloaded");
-              }}>Export backup (JSON)</Button>
+                const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `ah_tms_backup_${todayISO()}.json`; a.click(); try { localStorage.setItem("ah_last_backup", String(Date.now())); } catch { /* ignore */ } toast("Backup downloaded");
+              }}>Download backup now</Button>
               {!CLOUD && <Button variant="secondary" size="sm" onClick={() => document.getElementById("import-file")?.click()}>Import backup</Button>}
               <input id="import-file" type="file" accept="application/json" className="hidden" onChange={(e) => {
                 const f = e.target.files?.[0]; if (!f) return;
@@ -110,7 +110,7 @@ export default function Admin() {
               }} />
               {!CLOUD && <Button variant="danger" size="sm" onClick={() => { if (confirm("Reset all data to demo seed? This cannot be undone.")) reset(); }}>Reset demo data</Button>}
             </div>
-            <p className="text-[11px] text-gray-500 mt-3">Production: enable Supabase daily backups (free tier: 7-day retention on paid plans; on free tier take scheduled <code>pg_dump</code> exports). Store a copy off-site.</p>
+            <p className="text-[11px] text-gray-500 mt-3">Last download: {(() => { try { const t = Number(localStorage.getItem("ah_last_backup")); return t ? new Date(t).toLocaleDateString("en-IN") : "never"; } catch { return "never"; } })()}. Save the file to Google Drive or email it to yourself. {CLOUD && "The database also keeps a nightly copy of all records for the last 14 days."}</p>
           </Card>
           <Card className="p-4 lg:col-span-2">
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-2"><KeyRound className="w-4 h-4" /> Security checklist (production)</h3>

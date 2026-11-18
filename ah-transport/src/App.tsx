@@ -3,13 +3,14 @@ import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
 import { CONFIG_ERROR } from "./lib/supabase";
 import {
   LayoutDashboard, Truck, FileText, Wrench, CalendarClock, Users, Link2, ReceiptText, Droplets,
-  Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2,
+  Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2, Camera,
 } from "lucide-react";
 import { daysLeft, fmtDate } from "./company";
 import { Badge, Button } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import DriverReports from "./pages/DriverReports";
 import { askNew } from "./launch";
 import Vehicles from "./pages/Vehicles";
 import Documents from "./pages/Documents";
@@ -35,6 +36,7 @@ export const NAV: { key: string; label: string; icon: typeof Truck; core?: boole
   { key: "drivers", label: "Drivers", icon: Users, core: true },
   { key: "tracking", label: "Live location", icon: MapPin, core: true },
   { key: "expiry", label: "Papers & Expiry", icon: CalendarClock },
+  { key: "driverreports", label: "Driver reports", icon: Camera },
   { key: "documents", label: "Vehicle Papers", icon: FileText },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "assignments", label: "Assignments", icon: Link2 },
@@ -100,7 +102,7 @@ function Shell() {
   if (!user) return <Login />;
 
   const allowed = PERMISSIONS[user.role];
-  const nav = NAV.filter((n) => allowed.includes(n.key === "overview" ? "dashboard" : n.key));
+  const nav = NAV.filter((n) => allowed.includes(n.key === "overview" ? "dashboard" : n.key === "driverreports" ? "drivers" : n.key));
   const core = nav.filter((n) => n.core);
   const more = nav.filter((n) => !n.core);
 
@@ -122,6 +124,7 @@ function Shell() {
       case "reports": return <Reports />;
       case "tracking": return <Tracking />;
       case "admin": return <Admin />;
+      case "driverreports": return <DriverReports />;
       case "overview": return <Dashboard onNavigate={setPage} />;
       default: return <Home onNavigate={setPage} />;
     }

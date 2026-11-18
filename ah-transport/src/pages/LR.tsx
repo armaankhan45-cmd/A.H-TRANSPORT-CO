@@ -6,7 +6,7 @@ import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, fmtINR, todayISO, uid, nextSeq } from "../company";
-import { downloadLR, printCanvas } from "../pdf";
+import { downloadLR, printCanvas, lrPdfFile, sharePdf } from "../pdf";
 import LRPreview, { LR_H, LR_W } from "../components/LRPreview";
 import type { LR } from "../types";
 
@@ -65,6 +65,12 @@ export default function LRPage() {
   const vehicle = (id: string) => db.vehicles.find((v) => v.id === id);
   const driver = (id: string) => db.drivers.find((d) => d.id === id);
 
+  const sharePdfWhatsApp = async (lr: LR) => {
+    toast("Preparing PDF…");
+    const f = await lrPdfFile(lr, vehicle(lr.vehicleId), driver(lr.driverId), firm);
+    const r = await sharePdf(f, `LR ${lr.lrNo} — ${firm.display}`);
+    if (r === "saved") toast("PDF saved — attach it in WhatsApp");
+  };
   const shareWhatsApp = (lr: LR) => {
     const text = `*A.H. TRANSPORT CO.*%0ALR No: ${lr.lrNo}%0ADate: ${fmtDate(lr.date)}%0AFrom: ${lr.from} → To: ${lr.to}%0AConsignor: ${lr.consignor}%0AConsignee: ${lr.consignee}%0AVehicle: ${lrVehicleNo(lr, vehicle(lr.vehicleId)?.regNo)}%0AGoods: ${lr.goods} (${lr.quantity})%0ANet Wt: ${lr.net} kg%0AFreight: Rs. ${lr.freight}%0A${lr.status === "Final" ? "Download the PDF and attach it here." : "DRAFT — not finalised"}`;
     window.open(`https://wa.me/?text=${text}`, "_blank");
@@ -103,6 +109,7 @@ export default function LRPage() {
                   <button title="View / print" onClick={() => setPreview(l)} className="p-1.5 rounded hover:bg-gray-100"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button title="Edit" onClick={() => editLR(l)} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
                   <button title="Delete" onClick={() => setDel(l)} className="p-1.5 rounded hover:bg-gray-100"><Trash2 className="w-4 h-4 text-red-600" /></button>
+                  <button title="Share PDF on WhatsApp" onClick={() => void sharePdfWhatsApp(l)} className="px-2 py-1 rounded bg-green-100 text-green-900 text-xs font-semibold inline-flex items-center gap-1 hover:bg-green-200"><MessageCircle className="w-4 h-4" /> Share</button>
                   <button title="Download PDF" onClick={() => { void downloadLR(l, vehicle(l.vehicleId), driver(l.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
@@ -159,7 +166,7 @@ export default function LRPage() {
               <FontToggle />
               <Button variant="secondary" onClick={doPrint}><Printer className="w-4 h-4" /> Print A4</Button>
               <Button variant="secondary" onClick={() => downloadLR(preview, vehicle(preview.vehicleId), driver(preview.driverId), firm)}><Download className="w-4 h-4" /> Download PDF</Button>
-              <Button variant="secondary" onClick={() => shareWhatsApp(preview)}><MessageCircle className="w-4 h-4" /> WhatsApp</Button>
+              <Button variant="secondary" onClick={() => void sharePdfWhatsApp(preview)}><MessageCircle className="w-4 h-4" /> Share PDF</Button>
               <Button variant="secondary" onClick={() => shareEmail(preview)}><Mail className="w-4 h-4" /> Email</Button>
               <Button variant="secondary" onClick={() => editLR(preview)}><Pencil className="w-4 h-4" /> Edit</Button>
             </div>

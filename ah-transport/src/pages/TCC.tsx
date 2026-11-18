@@ -5,7 +5,7 @@ import { useStore } from "../store";
 import { Card, PageHeader, Table, Badge, Button, SearchBox, Input, Field, Textarea, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, todayISO, uid, nextSeq } from "../company";
-import { downloadTCC, printCanvas } from "../pdf";
+import { downloadTCC, printCanvas, tccPdfFile, sharePdf } from "../pdf";
 import TCCPreview, { TCC_H, TCC_W } from "../components/TCCPreview";
 import type { TCC } from "../types";
 import { readExtra, packExtra, normReg } from "../tccExtra";
@@ -46,6 +46,11 @@ export default function TCCPage() {
     setTf(null);
   };
 
+  const shareTcc = async (t: TCC) => {
+    toast("Preparing PDF…");
+    const f = await tccPdfFile(t, vehicle(t.vehicleId), driver(t.driverId), firm);
+    if ((await sharePdf(f, `TCC ${t.tccNo} — ${firm.display}`)) === "saved") toast("PDF saved — attach it in WhatsApp");
+  };
   const doPrint = () => { if (!printCanvas(printRef.current, "TCC", TCC_W, TCC_H)) toast("Allow pop-ups to print", "error"); };
 
   return (
@@ -72,6 +77,7 @@ export default function TCCPage() {
                   <button onClick={() => setPreview(t)} className="p-1.5 rounded hover:bg-gray-100" title="View"><Eye className="w-4 h-4 text-gray-600" /></button>
                   <button onClick={() => editTCC(t)} className="p-1.5 rounded hover:bg-gray-100" title="Edit"><Pencil className="w-4 h-4 text-blue-600" /></button>
                   <button onClick={() => setDel(t)} className="p-1.5 rounded hover:bg-gray-100" title="Delete"><Trash2 className="w-4 h-4 text-red-600" /></button>
+                  <button title="Share PDF on WhatsApp" onClick={() => void shareTcc(t)} className="px-2 py-1 rounded bg-green-100 text-green-900 text-xs font-semibold inline-flex items-center gap-1 hover:bg-green-200"><MessageCircle className="w-4 h-4" /> Share</button>
                   <button onClick={() => { void downloadTCC(t, vehicle(t.vehicleId), driver(t.driverId), firm); toast("PDF generated"); }} className="p-1.5 rounded hover:bg-gray-100" title="Download PDF"><Download className="w-4 h-4 text-green-700" /></button>
                 </div>
               </td>
