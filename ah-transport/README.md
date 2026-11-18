@@ -102,3 +102,7 @@ If you have the original printed LR/TCC photos, place them in
 React 19 · TypeScript · Vite · Tailwind CSS v4 · lucide-react · jsPDF · SheetJS ·
 PWA manifest + service worker · Supabase (Postgres, Auth, Storage, RLS) ·
 deployable to Vercel/Netlify free tier.
+
+## Android driver app
+Built by GitHub: repo → Actions → "Build Android app" → Run workflow → download `AH-Driver-apk`.
+The app loads the live website and uses background location (works with the screen off).
