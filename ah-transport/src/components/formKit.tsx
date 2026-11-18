@@ -33,7 +33,7 @@ export function V({ x, y, w, size = 32, align, bold = true, children, style }: {
   const m = useFontMode();
   const font: CSSProperties = m === "hand"
     ? { fontFamily: HAND, fontSize: size * 1.2, marginTop: -size * 0.1, fontWeight: bold ? 700 : 500 }
-    : { fontFamily: "Arial, Helvetica, sans-serif", fontSize: size * 0.82, marginTop: size * 0.08, fontWeight: bold ? 700 : 500 };
+    : { fontFamily: "Arial, Helvetica, sans-serif", fontSize: size * 0.82, marginTop: size * 0.16, fontWeight: bold ? 700 : 500 };
   return <div style={at(x, y, w, undefined, { color: INK, ...font, textAlign: align, lineHeight: 1.15, whiteSpace: "nowrap", ...style })}>{children}</div>;
 }
 export const H = ({ x, y, w, t = 2 }: { x: number; y: number; w: number; t?: number }) => <div style={at(x, y, w, 0, { borderTop: `${t}px solid #000` })} />;
