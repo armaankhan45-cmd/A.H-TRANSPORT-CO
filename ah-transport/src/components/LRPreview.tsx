@@ -86,8 +86,8 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
       <T x={765} y={712} size={22} bold>G. Wt. :</T>
       <T x={765} y={770} size={22} bold>T. Wt. :</T>
       <T x={765} y={867} size={22} bold>N. Wt. :</T>
-      <V x={700} y={728} w={210} size={24} align="center">{lr.gross}</V>
-      <V x={700} y={790} w={210} size={24} align="center">{lr.tare}</V>
+      <V x={700} y={734} w={210} size={24} align="center">{lr.gross}</V>
+      <V x={700} y={797} w={210} size={24} align="center">{lr.tare}</V>
       <V x={700} y={905} w={210} size={40} align="center">{lr.net}</V>
       <V x={60} y={regLines.length > 1 ? 770 : 812} w={225} size={50} align="center" style={{ whiteSpace: "normal", lineHeight: "56px" }}>{regLines.map((l) => <div key={l}>{l}</div>)}</V>
       <V x={300} y={770} w={375} size={52} align="center" style={{ whiteSpace: "normal", lineHeight: "56px" }}>{lr.goods}</V>
@@ -104,9 +104,9 @@ export default function LRPreview({ lr, vehicle, firm }: { lr: LR; vehicle?: Veh
 
       {/* bottom blocks */}
       <Box x={48} y={985} w={580} h={128} />
-      <T x={63} y={1005} size={18.5}>BE / Invoice No. :</T><H x={190} y={1023} w={425} t={1.5} /><V x={196} y={998} size={22}>{lr.beNo}</V>
-      <T x={63} y={1046} size={18.5}>Reporting Date &amp; Time :</T><H x={232} y={1063} w={383} t={1.5} /><V x={238} y={1038} size={20}>{fmtDT(lr.reportingDT)}</V>
-      <T x={63} y={1087} size={18.5}>Unloading Date &amp; Time :</T><H x={238} y={1104} w={377} t={1.5} /><V x={244} y={1079} size={20}>{fmtDT(lr.unloadingDT)}</V>
+      <T x={63} y={1005} size={18.5}>BE / Invoice No. :</T><H x={206} y={1023} w={409} t={1.5} /><V x={214} y={998} size={22}>{lr.beNo}</V>
+      <T x={63} y={1046} size={18.5}>Reporting Date &amp; Time :</T><H x={268} y={1063} w={347} t={1.5} /><V x={276} y={1038} size={20}>{fmtDT(lr.reportingDT)}</V>
+      <T x={63} y={1087} size={18.5}>Unloading Date &amp; Time :</T><H x={272} y={1104} w={343} t={1.5} /><V x={280} y={1079} size={20}>{fmtDT(lr.unloadingDT)}</V>
       <Box x={48} y={1113} w={580} h={90} />
       <T x={135} y={1123} size={30} ls={2} style={{ fontWeight: 900 }}>GSTIN : {firm.gstin}</T>
       <T x={158} y={1160} size={30} ls={2} style={{ fontWeight: 900 }}>PAN No. : {firm.pan}</T>

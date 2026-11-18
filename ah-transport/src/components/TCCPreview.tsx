@@ -43,27 +43,26 @@ export default function TCCPreview({ tcc, vehicle, driver, firm }: { tcc: TCC; v
       {text(624, "Dear Sir,", 182)}
       {text(672, "We intend to Transport")}
       <H x={462} y={697} w={600} t={1.5} />
-      <V x={470} y={655} w={590} size={34}>{x.material}</V>
+      <V x={470} y={661} w={590} size={34}>{x.material}</V>
       {text(724, "in vehicle No.")}
-      <H x={346} y={737} w={712} t={1.5} />
-      <V x={346} y={700} w={712} size={36} align="center">{regNo}</V>
+      <H x={346} y={749} w={712} t={1.5} />
+      <V x={346} y={711} w={712} size={36} align="center">{regNo}</V>
       {text(778, "On behalf of M/s.")}
       <H x={396} y={805} w={640} t={1.5} />
-      <V x={404} y={755} w={630} size={34}>{tcc.onBehalf}</V>
+      <V x={404} y={768} w={630} size={34}>{tcc.onBehalf}</V>
       {text(824, "We hereby certify that the previous cargo loaded in the above vehicle was")}
       <H x={188} y={888} w={872} t={1.5} />
-      <V x={188} y={844} w={872} size={40} align="center">{tcc.prevCargo}</V>
-      <V x={188} y={850} w={872} size={40} align="center">{tcc.prevCargo}</V>
+      <V x={188} y={852} w={872} size={40} align="center">{tcc.prevCargo}</V>
       {text(924, "Each compartment of the vehicle has been cleaned properly as per", 187)}
       {text(977, "requirement and it is fit for carrying above product.", 187)}
-      <V x={792} y={962} size={36}>{tcc.prevCargo}</V>
+      <V x={792} y={966} size={36}>{tcc.prevCargo}</V>
       {text(1072, "We also certify that the driver of the above vehicle is duly authorized to")}
       {text(1127, "driver Hazardous goods vehicle and his licence in endorsed to the effect.", 182)}
 
       {/* driver */}
       {text(1240, "Name of the Driver :", 175)}
       <H x={425} y={1264} w={640} t={1.5} />
-      <V x={425} y={1218} w={640} size={38} align="center">{driverName}</V>
+      <V x={425} y={1224} w={640} size={38} align="center">{driverName}</V>
       {text(1345, "Signature of the Driver :", 172)}
       <H x={460} y={1368} w={605} t={1.5} />
       {driverName && <div style={at(560, 1296, 460, 90, { color: INK, fontFamily: "'Reenie Beanie',cursive", fontSize: 72, lineHeight: "80px", transform: "rotate(-4deg)", whiteSpace: "nowrap" })}>{driverName}</div>}
