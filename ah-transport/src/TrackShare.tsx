@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, ShieldCheck, Square } from "lucide-react";
 import { COMPANY } from "./company";
 import { DATA_MODE, supabase } from "./lib/supabase";
+import { shrinkPhoto, submitReport, type ReportKind } from "./reports";
 
 /** Page a driver opens from the private link. No login. Nothing is sent until the driver taps Allow. */
 type Info = { name: string; vehicle: string | null };
@@ -42,6 +43,41 @@ async function stop(token: string) {
     const d = (db.drivers || []).find((x: any) => x.trackToken === token);
     if (d) { db.locations = (db.locations || []).filter((l: any) => l.driverId !== d.id); localStorage.setItem(DEMO_KEY, JSON.stringify(db)); }
   } catch { /* ignore */ }
+}
+
+function SendCard({ token }: { token: string }) {
+  const [kind, setKind] = useState<ReportKind>("Trip photo");
+  const [photo, setPhoto] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const kinds: ReportKind[] = ["Trip photo", "Toll receipt", "Breakdown"];
+  const pick = async (f?: File | null) => { if (!f) return; try { setPhoto(await shrinkPhoto(f)); setMsg(null); } catch { setMsg({ ok: false, text: "Could not read that photo. Try again." }); } };
+  const sendIt = async () => {
+    if (!photo && !note.trim()) { setMsg({ ok: false, text: "Add a photo or write a short note." }); return; }
+    setBusy(true);
+    const ok = await submitReport(token, kind, note.trim(), photo);
+    setBusy(false);
+    if (ok) { setPhoto(""); setNote(""); setMsg({ ok: true, text: "Sent to the office. Thank you!" }); }
+    else setMsg({ ok: false, text: "Not sent. Check your internet and try again." });
+  };
+  return (
+    <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 mt-4">
+      <p className="text-xl font-bold text-center">Send to the office</p>
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        {kinds.map((k) => (
+          <button key={k} onClick={() => setKind(k)} className={`rounded-xl py-3 text-sm font-bold leading-tight ${kind === k ? "bg-green-700 text-white" : "bg-slate-100 text-slate-700"}`}>{k}</button>
+        ))}
+      </div>
+      <label className="block mt-4 rounded-2xl border-2 border-dashed border-slate-300 text-center py-5 font-bold text-slate-700 active:scale-[0.98]">
+        {photo ? <img src={photo} alt="" className="mx-auto max-h-48 rounded-lg" /> : "Take or choose a photo"}
+        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+      </label>
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={2} placeholder="Note (optional)" className="w-full mt-3 rounded-xl border border-slate-300 p-3 text-base" />
+      {msg && <p className={`mt-3 text-center font-bold ${msg.ok ? "text-green-700" : "text-red-700"}`}>{msg.text}</p>}
+      <button disabled={busy} onClick={sendIt} className="w-full rounded-2xl bg-green-700 text-white font-extrabold py-4 text-xl mt-3 disabled:opacity-60">{busy ? "Sending…" : "Send"}</button>
+    </div>
+  );
 }
 
 export default function TrackShare({ token }: { token: string }) {
@@ -104,7 +140,7 @@ export default function TrackShare({ token }: { token: string }) {
 
   const big = "w-full rounded-2xl text-white font-extrabold py-5 text-2xl leading-tight active:scale-[0.98] transition";
   return (
-    <div className="min-h-screen bg-green-50 grid place-items-center p-4">
+    <div className="min-h-screen bg-green-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
         <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
         {info === undefined && <p className="py-10 text-lg text-gray-500">…</p>}
@@ -137,6 +173,7 @@ export default function TrackShare({ token }: { token: string }) {
           </>
         )}
       </div>
+      {info && <SendCard token={token} />}
     </div>
   );
 }

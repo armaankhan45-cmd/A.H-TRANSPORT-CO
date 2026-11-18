@@ -53,11 +53,34 @@ async function capture(el: ReactElement, w: number): Promise<HTMLCanvasElement> 
     return await html2canvas(node, { scale: 2, backgroundColor: "#fff", logging: false });
   } finally { root.unmount(); host.remove(); }
 }
-async function formPdf(el: ReactElement, w: number, h: number, file: string) {
+async function formDoc(el: ReactElement, w: number, h: number) {
   const c = await capture(el, w);
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 10, 10, 190, (190 * h) / w);
-  doc.save(file);
+  return doc;
+}
+async function formPdf(el: ReactElement, w: number, h: number, file: string) { (await formDoc(el, w, h)).save(file); }
+
+/** The LR / TCC as a PDF file object, ready for the phone's share sheet (WhatsApp, email…). */
+export async function lrPdfFile(lr: LR, vehicle: Vehicle | undefined, driver: Driver | undefined, firm: Firm) {
+  const doc = await formDoc(createElement(LRPreview, { lr, vehicle, driver, firm }), LR_W, LR_H);
+  return new File([doc.output("blob")], `LR_${lr.lrNo.replace(/[^\w-]/g, "_")}.pdf`, { type: "application/pdf" });
+}
+export async function tccPdfFile(tcc: TCC, vehicle: Vehicle | undefined, driver: Driver | undefined, firm: Firm) {
+  const doc = await formDoc(createElement(TCCPreview, { tcc, vehicle, driver, firm }), TCC_W, TCC_H);
+  return new File([doc.output("blob")], `TCC_${tcc.tccNo.replace(/[^\w-]/g, "_")}.pdf`, { type: "application/pdf" });
+}
+/** Opens the share sheet with the PDF. Where files cannot be shared (some desktops) the PDF is saved and WhatsApp opens. */
+export async function sharePdf(file: File, text: string): Promise<"shared" | "saved" | "cancelled"> {
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: file.name, text }); return "shared"; }
+    catch (e) { if ((e as Error).name === "AbortError") return "cancelled"; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  return "saved";
 }
 
 export function downloadLR(lr: LR, vehicle: Vehicle | undefined, driver: Driver | undefined, firm: Firm) {

@@ -27,7 +27,7 @@ export function waLink(mobile: string, name: string, url: string) {
   const num = mobile.replace(/\D/g, "").replace(/^0+/, "");
   const full = num.length === 10 ? "91" + num : num;
   const text = `Hello ${name}, this is A.H. Transport Co.
-Open this link and tap the big button "Turn on location" so we can see your truck:
+Open this link. Tap "Yes, share" so we can see your truck. You can also send us trip photos, toll receipts or a breakdown report from the same page:
 ${url}`;
   return `https://wa.me/${full}?text=${encodeURIComponent(text)}`;
 }

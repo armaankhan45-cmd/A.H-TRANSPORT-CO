@@ -14,6 +14,8 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
     ...db.drivers.map((d) => ({ left: daysLeft(d.licenceExpiry), what: `${d.name} · Driving licence`, date: d.licenceExpiry })),
   ].filter((x) => x.left <= nd).sort((a, b) => a.left - b.left);
 
+  const lastBackup = (() => { try { return Number(localStorage.getItem("ah_last_backup")) || 0; } catch { return 0; } })();
+  const backupDue = Date.now() - lastBackup > 7 * 86400000;
   const go = (page: string, isNew = false) => () => { if (isNew) askNew(); onNavigate(page); };
   const links = [
     { page: "vehicles", label: "Vehicles", n: `${db.vehicles.length}`, icon: Truck },
@@ -28,6 +30,11 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
       <p className="text-slate-600 mt-1 mb-6">What do you want to do?</p>
 
       <InstallApp />
+      {backupDue && (
+        <button onClick={go("admin")} className="w-full text-left rounded-lg border-2 border-signal bg-signal/10 p-3 mb-4 font-semibold">
+          Backup due. Tap to download a copy of all your records.
+        </button>
+      )}
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
