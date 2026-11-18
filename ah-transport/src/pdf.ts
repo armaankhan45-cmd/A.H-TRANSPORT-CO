@@ -55,8 +55,9 @@ async function capture(el: ReactElement, w: number): Promise<HTMLCanvasElement> 
 }
 async function formDoc(el: ReactElement, w: number, h: number) {
   const c = await capture(el, w);
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 10, 10, 190, (190 * h) / w);
+  const pw = 200, ph = (pw * h) / w;   // page = exactly the form, no blank A4 space
+  const doc = new jsPDF({ unit: "mm", format: [pw, ph], orientation: pw >= ph ? "landscape" : "portrait" });
+  doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pw, ph);
   return doc;
 }
 async function formPdf(el: ReactElement, w: number, h: number, file: string) { (await formDoc(el, w, h)).save(file); }
