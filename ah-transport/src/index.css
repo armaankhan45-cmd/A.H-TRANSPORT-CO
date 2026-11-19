@@ -1,43 +1,45 @@
-@import "@fontsource/ibm-plex-sans/400.css";
-@import "@fontsource/ibm-plex-sans/500.css";
-@import "@fontsource/ibm-plex-sans/600.css";
-@import "@fontsource/ibm-plex-sans-condensed/600.css";
-@import "@fontsource/ibm-plex-sans-condensed/700.css";
+@import "@fontsource/red-hat-display/600.css";
+@import "@fontsource/red-hat-display/700.css";
+@import "@fontsource/red-hat-text/400.css";
+@import "@fontsource/red-hat-text/500.css";
+@import "@fontsource/red-hat-text/600.css";
+@import "@fontsource/red-hat-mono/400.css";
+@import "@fontsource/red-hat-mono/500.css";
 @import "tailwindcss";
 @theme {
-  --font-display: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
-  /* strong "brand" shades become tanker-steel navy; light tints stay green for success states */
-  --color-green-600: #2a6aa8;
-  --color-green-700: #1d4f80;
-  --color-green-800: #153d66;
-  --color-green-900: #0f2e4d;
-  --color-green-950: #0a2036;
-  --color-signal: #ffc20e;
-  --color-signal-dark: #e6ac00;
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-600: #16a34a;
-  --color-brand-700: #15803d;
-  --color-brand-800: #166534;
-  --color-brand-900: #14532d;
-  --color-brand-950: #052e16;
+  /* Furrow (Hallmark): warm manila paper, near-black ink, one tangerine signal */
+  --font-display: "Red Hat Display", "Red Hat Text", system-ui, sans-serif;
+  --font-mono: "Red Hat Mono", ui-monospace, monospace;
+  --radius-lg: 6px; --radius-xl: 10px; --radius-2xl: 14px;
+  --color-slate-50: #faf7f0; --color-slate-100: #f2ede1; --color-slate-200: #e4ddcc; --color-slate-300: #d2c9b4;
+  --color-slate-400: #a39b89; --color-slate-500: #766f62; --color-slate-600: #58534a; --color-slate-700: #403c35;
+  --color-slate-800: #2a2722; --color-slate-900: #1a1816; --color-slate-950: #12110f;
+  --color-gray-50: #faf7f0; --color-gray-100: #f2ede1; --color-gray-200: #e4ddcc; --color-gray-300: #d2c9b4;
+  --color-gray-400: #a39b89; --color-gray-500: #766f62; --color-gray-600: #58534a; --color-gray-700: #403c35; --color-gray-900: #1a1816;
+  --color-green-600: #4a453c; --color-green-700: #38342d; --color-green-800: #2a2722; --color-green-900: #1f1d19; --color-green-950: #1a1816;
+  --color-signal: #f5833a; --color-signal-dark: #e16f26;
+  --color-brand-50: #f0fdf4; --color-brand-100: #dcfce7; --color-brand-600: #16a34a; --color-brand-700: #15803d; --color-brand-800: #166534; --color-brand-900: #14532d; --color-brand-950: #052e16;
 }
 html,body,#root{height:100%}
-body{font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f3f6;color:#0f1b2a;font-size:15px;-webkit-font-smoothing:antialiased}
+body{font-family:"Red Hat Text",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f4efe4;color:#1a1816;font-size:15px;-webkit-font-smoothing:antialiased}
 h1,h2,h3{text-wrap:balance}
 button,a,summary,label{touch-action:manipulation}
 button{transition:background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active:not(:disabled){transform:translateY(1px)}
-::selection{background:#ffc20e;color:#0a2036}
-input,textarea{caret-color:#1d4f80}
+::selection{background:#f5833a;color:#1a1816}
+input,textarea{caret-color:#e16f26}
 input[type=date]{min-height:2.5rem}
-.skip{position:absolute;left:-999px;top:8px;background:#ffc20e;color:#0a2036;padding:8px 14px;border-radius:8px;font-weight:600;z-index:100}
+.skip{position:absolute;left:-999px;top:8px;background:#f5833a;color:#1a1816;padding:8px 14px;border-radius:8px;font-weight:600;z-index:100}
 .skip:focus{left:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 h1,h2,h3,.font-display{font-family:var(--font-display);letter-spacing:.005em}
 .hazard{display:none}
 table{font-variant-numeric:tabular-nums}
-:focus-visible{outline:3px solid #ffc20e;outline-offset:2px}
+.fig{font-family:var(--font-mono);font-size:.92em;letter-spacing:0}
+@keyframes land{from{opacity:0;transform:translateY(-8px) scale(.6)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-60px)}}
+:focus-visible{outline:3px solid #e16f26;outline-offset:2px}
 *{-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:#c3ccd8;border-radius:8px;border:2px solid transparent;background-clip:content-box}
@@ -82,7 +84,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
 /* Indian commercial number plate: the app's signature detail */
 .plate{display:inline-flex;align-items:stretch;background:#ffc20e;color:#111;border:2px solid #14181f;border-radius:6px;overflow:hidden;font-family:var(--font-display);font-weight:700;letter-spacing:.07em;font-size:15px;line-height:1;white-space:nowrap;box-shadow:0 1px 0 rgba(0,0,0,.15)}
-.plate::before{content:"IND";display:flex;align-items:flex-end;background:#1d4f9f;color:#fff;font:600 7px/1 "IBM Plex Sans",sans-serif;letter-spacing:.04em;padding:0 3px 4px}
+.plate::before{content:"IND";display:flex;align-items:flex-end;background:#1d4f9f;color:#fff;font:600 7px/1 "Red Hat Text",sans-serif;letter-spacing:.04em;padding:0 3px 4px}
 .plate>span{padding:6px 9px}
 .plate-lg{font-size:22px;border-width:3px;border-radius:8px}.plate-lg::before{font-size:9px;padding:0 4px 6px}.plate-lg>span{padding:8px 14px}
 /* motion: one page entrance, one live pulse, one moving road */
@@ -93,9 +95,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 @keyframes road{to{background-position:-80px 0}}
 @keyframes drive{from{transform:translateX(-120px)}to{transform:translateX(calc(100% + 120px))}}
 .road{position:relative;height:90px;overflow:hidden}
-.road::after{content:"";position:absolute;left:0;right:0;bottom:18px;height:4px;background:repeating-linear-gradient(90deg,#ffc20e 0 40px,transparent 40px 80px);animation:road 1.2s linear infinite;opacity:.9}
+.road::after{content:"";position:absolute;left:0;right:0;bottom:18px;height:4px;background:repeating-linear-gradient(90deg,#f5833a 0 40px,transparent 40px 80px);animation:road 1.2s linear infinite;opacity:.9}
 .road::before{content:"";position:absolute;left:0;right:0;bottom:12px;height:1px;background:rgba(255,255,255,.2)}
-.road .truck{position:absolute;bottom:24px;left:0;width:100%;animation:drive 14s linear infinite;color:#ffc20e}
+.road .truck{position:absolute;bottom:24px;left:0;width:100%;animation:drive 14s linear infinite;color:#f5833a}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .rise>*{animation:rise .5s cubic-bezier(.22,1,.36,1) both}.rise>*:nth-child(2){animation-delay:.08s}.rise>*:nth-child(3){animation-delay:.16s}.rise>*:nth-child(4){animation-delay:.24s}
 .card-lift{transition:transform .15s ease,border-color .15s ease}.card-lift:hover{transform:translateY(-2px);border-color:#94a3b8}
+/* moulded keys */
+.key{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.18),0 1px 1px rgba(26,24,22,.15)}
+.key:active:not(:disabled){box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+header.sticky{background:#fdfcf9;-webkit-backdrop-filter:none;backdrop-filter:none}
+html{min-height:100dvh}
