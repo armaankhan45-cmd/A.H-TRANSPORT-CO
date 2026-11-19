@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-white rounded-lg border border-slate-300/70 ${className}`}>{children}</div>;
+  return <div className={`bg-white rounded-xl border border-slate-200 ${className}`}>{children}</div>;
 }
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+        <h1 className="font-display text-2xl sm:text-[28px] font-bold text-slate-900 leading-tight tracking-tight">{title}</h1>
+        {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -19,25 +19,25 @@ export function Button({ children, onClick, variant = "primary", className = "",
   children: React.ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" | "ghost" | "success"; className?: string; type?: "button" | "submit"; disabled?: boolean; size?: "sm" | "md";
 }) {
   const v: Record<string, string> = {
-    primary: "bg-signal text-slate-900 font-semibold hover:bg-signal-dark",
+    primary: "bg-signal text-slate-900 font-semibold hover:bg-signal-dark shadow-[inset_0_-1px_0_rgba(0,0,0,.12)]",
     success: "bg-green-600 text-white hover:bg-green-700",
-    secondary: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
+    secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400",
     danger: "bg-red-600 text-white hover:bg-red-700",
     ghost: "text-gray-600 hover:bg-gray-100",
   };
-  const s = size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3.5 py-2 text-sm";
-  return <button type={type} disabled={disabled} onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${v[variant]} ${s} ${className}`}>{children}</button>;
+  const s = size === "sm" ? "px-2.5 py-1.5 text-xs min-h-8" : "px-4 py-2 text-sm min-h-10";
+  return <button type={type} disabled={disabled} onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed ${v[variant]} ${s} ${className}`}>{children}</button>;
 }
 export function Field({ label, children, required, hint, className = "" }: { label: string; children: React.ReactNode; required?: boolean; hint?: string; className?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="block text-xs font-semibold text-gray-600 mb-1">{label}{required && <span className="text-red-500"> *</span>}</span>
+      <span className="block text-[13px] font-medium text-slate-700 mb-1">{label}{required && <span className="text-red-500"> *</span>}</span>
       {children}
       {hint && <span className="block text-[11px] text-gray-400 mt-0.5">{hint}</span>}
     </label>
   );
 }
-const inputCls = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-green-700 focus:ring-2 focus:ring-signal/60";
+const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-10 placeholder:text-slate-400 hover:border-slate-400 focus:border-green-700 focus:ring-2 focus:ring-signal/70 disabled:bg-slate-100 disabled:text-slate-500";
 export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const el = <input {...p} className={`${inputCls} ${p.className || ""}`} />;
   if (p.type !== "date") return el;
@@ -54,7 +54,7 @@ export function Select({ children, ...p }: React.SelectHTMLAttributes<HTMLSelect
   );
 }
 export function Badge({ children, cls = "bg-gray-100 text-gray-700" }: { children: React.ReactNode; cls?: string }) {
-  return <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cls}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium whitespace-nowrap before:content-[''] before:w-1.5 before:h-1.5 before:rounded-full before:bg-current before:opacity-70 ${cls}`}>{children}</span>;
 }
 export function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -78,13 +78,13 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto">
-      <div className={`bg-white rounded-xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} my-4`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl z-10">
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-4 h-4" /></button>
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 overflow-y-auto overscroll-contain" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-screen sm:min-h-0`}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
+          <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
         </div>
-        <div className="p-4 max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className="p-4 sm:max-h-[80vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
@@ -92,8 +92,8 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
 export function Confirm({ open, onCancel, onConfirm, message }: { open: boolean; onCancel: () => void; onConfirm: () => void; message: string }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4" role="alertdialog" aria-modal="true">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5">
         <h3 className="font-semibold mb-2">Please confirm</h3>
         <p className="text-sm text-gray-600 mb-4">{message}</p>
         <div className="flex justify-end gap-2">
@@ -124,11 +124,11 @@ export function Table({ headers, children, empty }: { headers: string[]; childre
     <div className="overflow-x-auto">
       <table ref={ref} className="rtable w-full text-sm">
         <thead>
-          <tr className="bg-slate-100 text-left text-xs text-slate-600 border-b border-slate-200">
+          <tr className="bg-slate-50 text-left text-[13px] text-slate-500 border-b border-slate-200">
             {headers.map((h) => <th key={h} className="px-3 py-2.5 font-semibold whitespace-nowrap">{h}</th>)}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">{children}</tbody>
+        <tbody className="divide-y divide-slate-100 [&_tr]:transition-colors [&_tr:hover]:bg-amber-50/40">{children}</tbody>
       </table>
       {empty && <Empty />}
     </div>
@@ -169,8 +169,8 @@ export function Stat({ label, value, icon, tone = "green", sub }: { label: strin
     <Card className="p-4">
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 leading-tight">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-[13px] font-medium text-slate-500 leading-tight">{label}</p>
+          <p className="font-display text-3xl font-bold text-slate-900 mt-1 tabular-nums">{value}</p>
           {sub && <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>}
         </div>
         {icon && <div className={`p-2 rounded-lg ${tones[tone]} shrink-0`}>{icon}</div>}

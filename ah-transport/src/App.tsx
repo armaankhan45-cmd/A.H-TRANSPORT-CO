@@ -135,46 +135,47 @@ function Shell() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#eef1f4]">
+    <div className="min-h-screen flex bg-[#f1f3f6]">
+      <a href="#main" className="skip">Skip to content</a>
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-60 bg-green-950 text-white transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
-        <div className="px-4 py-4 border-b border-green-900 flex items-center gap-2.5">
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white text-slate-700 border-r border-slate-200 transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
+        <div className="px-4 py-4 border-b border-slate-200 flex items-center gap-2.5">
           <div className="h-10 px-2 rounded-md bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-6 w-auto" /></div>
           <div className="min-w-0">
-            <p className="font-display font-bold text-lg leading-tight truncate">{firm.display}</p>
-            <p className="text-xs text-slate-300 truncate">Fleet management</p>
+            <p className="font-display font-bold text-[15px] leading-tight text-slate-900">{firm.display}</p>
+            <p className="text-xs text-slate-500 truncate">Fleet management</p>
           </div>
-          <button className="lg:hidden ml-auto" onClick={() => setSidebar(false)}><X className="w-5 h-5" /></button>
+          <button aria-label="Close menu" className="lg:hidden ml-auto p-1" onClick={() => setSidebar(false)}><X className="w-5 h-5" /></button>
         </div>
         {user?.role !== "Driver" && (
-          <div className="px-3 py-2 border-b border-green-900">
-            <label className="block text-xs text-slate-300 mb-1">Company</label>
-            <select value={firm.id} onChange={(e) => { switchFirm(e.target.value); setPage("dashboard"); }}
-              className="w-full rounded-md bg-green-900 text-white text-sm font-semibold px-2 py-1.5 border border-green-700 focus:outline-none">
+          <div className="px-3 py-3 border-b border-slate-200">
+            <label htmlFor="firm" className="block text-xs text-slate-500 mb-1">Company</label>
+            <select id="firm" value={firm.id} onChange={(e) => { switchFirm(e.target.value); setPage("dashboard"); }}
+              className="w-full rounded-lg bg-white text-slate-900 text-sm font-semibold px-2 py-2 border border-slate-300 focus:border-green-700">
               {firms.map((f) => <option key={f.id} value={f.id}>{f.display}</option>)}
             </select>
             {firm.placeholder && <p className="mt-1 text-[10px] text-amber-300">Firm details are placeholders - update them in company.ts.</p>}
           </div>
         )}
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="Main">
           {core.map((n) => {
             const Icon = n.icon;
             const activeItem = page === n.key;
             return (
               <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                className={`w-full flex items-center gap-3 pl-5 pr-4 py-3 text-base transition border-l-4 ${activeItem ? "bg-green-900 text-white font-semibold border-signal" : "border-transparent text-slate-300 hover:bg-green-900/60 hover:text-white"}`}>
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] ${activeItem ? "bg-signal/30 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`} aria-current={activeItem ? "page" : undefined}>
                 <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{n.label}</span>
               </button>
             );
           })}
-          <details className="mt-2 border-t border-green-900" open={more.some((n) => n.key === page)}>
-            <summary className="px-5 py-3 text-sm text-slate-300 cursor-pointer select-none hover:text-white">More</summary>
+          <details className="mt-2 pt-2 border-t border-slate-200" open={more.some((n) => n.key === page)}>
+            <summary className="px-3 py-2 text-sm text-slate-500 cursor-pointer select-none hover:text-slate-900">More</summary>
             {more.map((n) => {
               const Icon = n.icon;
               const activeItem = page === n.key;
               return (
                 <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${activeItem ? "bg-green-800 text-white font-semibold" : "text-green-100 hover:bg-green-900"}`}>
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${activeItem ? "bg-signal/30 text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
                   <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{n.label}</span>
                   {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
                   {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
@@ -183,7 +184,7 @@ function Shell() {
             })}
           </details>
         </nav>
-        <div className="p-3 border-t border-green-900 text-[11px] text-green-300">
+        <div className="p-3 border-t border-slate-200 text-xs text-slate-500">
           <p className="truncate">{firm.email}</p>
           <p>{firm.phones[0]}</p>
         </div>
@@ -192,15 +193,14 @@ function Shell() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-slate-300/70">
-          <div className="hazard" />
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200">
           <div className="flex items-center gap-2 px-3 sm:px-5 py-2.5">
-            <button className="lg:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setSidebar(true)}><Menu className="w-5 h-5" /></button>
-            <div className="hidden md:block font-display font-semibold text-lg text-slate-900">{user.role === "Driver" ? "Driver app" : (TITLES[page] || "Home")}</div>
+            <button aria-label="Open menu" className="lg:hidden p-2 rounded-lg hover:bg-slate-100" onClick={() => setSidebar(true)}><Menu className="w-5 h-5" /></button>
+            <div className="hidden md:block font-display font-semibold text-lg text-slate-900 tracking-tight">{user.role === "Driver" ? "Driver app" : (TITLES[page] || "Home")}</div>
             <div className="relative ml-auto w-40 sm:w-72">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-              <input value={globalQ} onChange={(e) => setGlobalQ(e.target.value)} placeholder="Search vehicle, driver, LR…"
-                className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-green-600" />
+              <input aria-label="Search" value={globalQ} onChange={(e) => setGlobalQ(e.target.value)} placeholder="Search vehicle, driver, LR…"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 py-2 text-sm min-h-10 focus:bg-white focus:border-green-700" />
               {globalQ && (
                 <div className="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto z-30">
                   {searchResults.length === 0 && <p className="p-3 text-xs text-gray-400">No matches</p>}
@@ -214,7 +214,7 @@ function Shell() {
               )}
             </div>
             <div className="relative">
-              <button onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-gray-100">
+              <button aria-label="Notifications" onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-slate-100">
                 <Bell className="w-5 h-5 text-gray-600" />
                 {notifications.length > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{notifications.length > 9 ? "9+" : notifications.length}</span>}
               </button>
@@ -246,11 +246,11 @@ function Shell() {
                 <p className="text-[10px] text-gray-500">{user.role}</p>
               </div>
             </div>
-            <button onClick={logout} className="p-2 rounded-lg hover:bg-gray-100" title="Logout"><LogOut className="w-5 h-5 text-gray-600" /></button>
+            <button onClick={logout} aria-label="Log out" className="p-2 rounded-lg hover:bg-slate-100" title="Log out"><LogOut className="w-5 h-5 text-gray-600" /></button>
           </div>
         </header>
 
-        <main className="p-3 sm:p-5 pb-24 lg:pb-5 flex-1 min-w-0">{!CLOUD && <div className="mb-2 rounded border border-amber-400 bg-amber-50 px-2 py-1 text-xs text-amber-900"><b>Demo mode</b> — sample data only. Real app needs the Supabase settings in Vercel.</div>}{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
+        <main id="main" className="p-3 sm:p-6 max-w-[1400px] w-full mx-auto pb-24 lg:pb-5 flex-1 min-w-0">{!CLOUD && <div className="mb-2 rounded border border-amber-400 bg-amber-50 px-2 py-1 text-xs text-amber-900"><b>Demo mode</b> — sample data only. Real app needs the Supabase settings in Vercel.</div>}{issues && issues.length > 0 && <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><b>Database setup incomplete.</b> Run these files in Supabase → SQL Editor (in order): {issues.join(", ")}. Also make sure your login has role super_admin, otherwise saving vehicles/drivers will be refused.</div>}{render()}</main>
         <footer className="px-5 py-3 text-[11px] text-gray-400 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
           <span>{firm.name} — {firm.address}</span>
           {!CLOUD && <button onClick={() => { if (confirm("Reset all data to demo seed?")) reset(); }} className="inline-flex items-center gap-1 hover:text-gray-600"><RefreshCw className="w-3 h-3" /> Reset demo data</button>}

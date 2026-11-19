@@ -3,7 +3,7 @@ import logoDark from "../assets/app-logo-dark.png";
 import { useStore, CLOUD } from "../store";
 import { COMPANY } from "../company";
 import { Button, Input, Field } from "../ui";
-import { Lock, Mail, Truck, ShieldCheck, Smartphone } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 
 const DEMO = [
   { role: "Super Admin", email: "admin@ahtransportco.com", pass: "admin123" },
@@ -33,19 +33,13 @@ export default function Login() {
             <div className="h-14 px-3 rounded-xl bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-8 w-auto" /></div>
             <div>
               <p className="font-bold text-lg leading-tight">{COMPANY.name}</p>
-              <p className="text-green-300 text-xs">{COMPANY.tagline}</p>
+              <p className="text-slate-300 text-xs">{COMPANY.tagline}</p>
             </div>
           </div>
-          <h2 className="text-3xl font-bold mt-12 leading-snug">Complete Transport<br />Management System</h2>
-          <p className="text-green-200 mt-3 text-sm max-w-md">Vehicles, drivers, papers & expiry, maintenance, LR, TCC, trips, salary, expenses, reports and driver app — one secure application.</p>
-          <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
-            {[["Fleet & Documents", Truck], ["Maintenance", ShieldCheck], ["LR / TCC PDF", Mail], ["Driver App / PWA", Smartphone]].map(([t, I]) => {
-              const Icon = I as typeof Truck;
-              return <div key={t as string} className="flex items-center gap-2 bg-green-900/60 rounded-lg px-3 py-2 text-xs"><Icon className="w-4 h-4 text-green-400" />{t as string}</div>;
-            })}
-          </div>
+          <h2 className="font-display text-4xl font-bold mt-16 leading-tight max-w-md">Every trip, every paper, in one place.</h2>
+          <p className="text-slate-300 mt-4 text-base max-w-md">Write LR and TCC, check vehicle papers, see where each truck is. Built for the A.H. team.</p>
         </div>
-        <div className="text-[11px] text-green-400 space-y-0.5">
+        <div className="text-xs text-slate-400 space-y-0.5">
           <p>{COMPANY.address}</p>
           <p>GSTIN {COMPANY.gstin} · PAN {COMPANY.pan}</p>
           <p>{COMPANY.phones.join(" · ")}</p>
@@ -61,27 +55,27 @@ export default function Login() {
               <p className="text-[11px] text-gray-500">Transport Management System</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-            <h1 className="text-xl font-bold text-gray-900">Sign in</h1>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+            <h1 className="font-display text-2xl font-bold text-slate-900">Sign in</h1>
             <p className="text-xs text-gray-500 mb-5">Use your office or driver account.</p>
             <form onSubmit={submit} className="space-y-3">
               <Field label="Email" required>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                  <Input className="pl-9" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@ahtransportco.com" required />
+                  <Input className="pl-9" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@ahtransportco.com" autoComplete="username" spellCheck={false} required />
                 </div>
               </Field>
               <Field label="Password" required>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                  <Input className="pl-9" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+                  <Input className="pl-9" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" autoComplete="current-password" required />
                 </div>
               </Field>
-              {err && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{err}</p>}
+              {err && <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{err}</p>}
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
             </form>
             {!CLOUD && <div className="mt-5 border-t border-dashed pt-4">
-              <p className="text-[11px] font-semibold text-gray-500 mb-2">DEMO ACCOUNTS — click to fill</p>
+              <p className="text-xs font-medium text-slate-500 mb-2">Demo accounts. Tap one to fill the form.</p>
               <div className="grid grid-cols-2 gap-2">
                 {DEMO.map((d) => (
                   <button key={d.email} onClick={() => { setEmail(d.email); setPassword(d.pass); }}

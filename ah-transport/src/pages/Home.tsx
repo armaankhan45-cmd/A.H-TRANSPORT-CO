@@ -27,12 +27,12 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
 
   return (
     <div className="max-w-5xl">
-      <h1 className="text-3xl font-bold leading-tight">{firm.display}</h1>
-      <p className="text-slate-600 mt-1 mb-6">What do you want to do?</p>
+      <h1 className="font-display text-3xl font-bold leading-tight tracking-tight">{firm.display}</h1>
+      <p className="text-slate-500 mt-1 mb-6">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}. What do you want to do?</p>
 
       <InstallApp />
       {backupDue && (
-        <div className="flex gap-2 rounded-lg border-2 border-signal bg-signal/10 p-3 mb-4 font-semibold items-center">
+        <div className="flex gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 mb-4 font-medium items-center">
           <button onClick={go("admin")} className="flex-1 text-left">Backup due. Tap to download a copy of all your records.</button>
           <button aria-label="Hide for 3 days" onClick={() => { try { localStorage.setItem("ah_bk_snooze", String(Date.now() + 3 * 86400000)); } catch { /* ignore */ } location.reload(); }} className="px-2 text-xl">×</button>
         </div>
@@ -41,36 +41,36 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
-            <button onClick={go("lr", true)} className="group flex items-center gap-4 rounded-lg bg-signal text-slate-900 p-5 text-left hover:bg-signal-dark transition">
+            <button onClick={go("lr", true)} className="group flex items-center gap-4 rounded-xl bg-signal text-slate-900 p-5 text-left hover:bg-signal-dark transition">
               <FilePlus2 className="w-10 h-10 shrink-0" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New LR</b><span className="text-sm">Transport receipt</span></span>
             </button>
-            <button onClick={go("tcc", true)} className="group flex items-center gap-4 rounded-lg bg-green-900 text-white p-5 text-left hover:bg-green-800 transition">
+            <button onClick={go("tcc", true)} className="group flex items-center gap-4 rounded-xl bg-green-950 text-white p-5 text-left hover:bg-green-900 transition">
               <Droplets className="w-10 h-10 shrink-0 text-signal" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New TCC</b><span className="text-sm text-slate-200">Tanker cleaning certificate</span></span>
             </button>
           </div>
 
-          <div className="bg-white rounded-lg border border-slate-300/70 divide-y divide-slate-200">
+          <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-200">
             {links.map((l) => { const Icon = l.icon; return (
               <button key={l.page} onClick={go(l.page)} className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-slate-50">
                 <Icon className="w-6 h-6 text-green-800 shrink-0" />
                 <span className="flex-1 text-lg font-medium">{l.label}</span>
-                <span className="text-sm text-slate-600">{l.n}</span>
+                <span className="text-sm text-slate-500 tabular-nums">{l.n}</span>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>); })}
           </div>
         </div>
 
         <div className="lg:col-span-2">
-          <h2 className="text-xl font-bold mb-2">Needs attention</h2>
-          <div className="bg-white rounded-lg border border-slate-300/70 divide-y divide-slate-200">
+          <h2 className="font-display text-xl font-bold mb-2">Needs attention</h2>
+          <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-200">
             {due.length === 0 && <p className="flex items-center gap-2 p-4 text-slate-600"><CircleCheck className="w-5 h-5 text-green-600" /> Nothing is due. All papers are valid.</p>}
             {due.slice(0, 7).map((x, i) => (
               <button key={i} onClick={go("expiry")} className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50">
                 <span className={`mt-1.5 w-2.5 h-2.5 rounded-full shrink-0 ${x.left < 0 ? "bg-red-600" : x.left <= 7 ? "bg-orange-500" : "bg-signal"}`} />
                 <span className="flex-1 min-w-0"><span className="block font-medium truncate">{x.what}</span>
-                  <span className="text-sm text-slate-600">{x.left < 0 ? `Expired ${Math.abs(x.left)} days ago` : `Expires in ${x.left} days`} · {fmtDate(x.date)}</span></span>
+                  <span className="text-sm text-slate-600">{x.left < 0 ? `Expired ${Math.abs(x.left)} ${Math.abs(x.left) === 1 ? "day" : "days"} ago` : `Expires in ${x.left} ${x.left === 1 ? "day" : "days"}`} · {fmtDate(x.date)}</span></span>
               </button>))}
             {due.length > 7 && <button onClick={go("expiry")} className="w-full px-4 py-3 text-left text-sm font-semibold text-green-800 hover:bg-slate-50">See all {due.length}</button>}
           </div>
