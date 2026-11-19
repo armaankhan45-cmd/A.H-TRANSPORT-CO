@@ -59,7 +59,7 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
               <FilePlus2 className="w-10 h-10 shrink-0" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New LR</b><span className="text-sm">Transport receipt</span></span>
             </button>
-            <button onClick={go("tcc", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-green-950 text-white p-5 text-left hover:bg-green-900 transition">
+            <button onClick={go("tcc", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-slate-900 text-white p-5 text-left hover:bg-slate-800 transition">
               <Droplets className="w-10 h-10 shrink-0 text-signal" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New TCC</b><span className="text-sm text-slate-200">Tanker cleaning certificate</span></span>
             </button>
