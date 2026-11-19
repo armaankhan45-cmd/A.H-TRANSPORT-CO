@@ -3,7 +3,7 @@ import { takeNew } from "../launch";
 import { FontToggle } from "../components/formKit";
 import { lrVehicleNo, lrValueText, packLR, normReg } from "../lrExtra";
 import { useStore } from "../store";
-import { Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
+import { Plate, Card, PageHeader, Table, Badge, Button, SearchBox, Select, Input, Field, Modal, Confirm } from "../ui";
 import { Plus, Printer, Download, Eye, Pencil, Trash2, CheckCircle2, MessageCircle, Mail } from "lucide-react";
 import { fmtDate, fmtINR, todayISO, uid, nextSeq } from "../company";
 import { downloadLR, printCanvas, lrPdfFile, sharePdf } from "../pdf";
@@ -100,7 +100,7 @@ export default function LRPage() {
               <td className="px-3 py-2 text-xs">{fmtDate(l.date)}</td>
               <td className="px-3 py-2 text-xs max-w-52"><span className="block truncate">{l.consignor}</span><span className="block truncate text-gray-500">→ {l.consignee}</span></td>
               <td className="px-3 py-2 text-xs">{l.from} → {l.to}</td>
-              <td className="px-3 py-2 text-xs font-semibold">{lrVehicleNo(l, vehicle(l.vehicleId)?.regNo) || "—"}</td>
+              <td className="px-3 py-2"><Plate no={lrVehicleNo(l, vehicle(l.vehicleId)?.regNo)} /></td>
               <td className="px-3 py-2 text-xs">{l.goods}<span className="block text-[10px] text-gray-500">{l.quantity}</span></td>
               <td className="px-3 py-2 text-xs">{fmtINR(Number(l.freight || 0))}</td>
               <td className="px-3 py-2"><Badge cls={l.status === "Final" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-700"}>{l.status}</Badge></td>

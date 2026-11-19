@@ -3,7 +3,7 @@ import logoDark from "../assets/app-logo-dark.png";
 import { useStore, CLOUD } from "../store";
 import { COMPANY } from "../company";
 import { Button, Input, Field } from "../ui";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Truck } from "lucide-react";
 
 const DEMO = [
   { role: "Super Admin", email: "admin@ahtransportco.com", pass: "admin123" },
@@ -29,7 +29,7 @@ export default function Login() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-gray-100">
       <div className="hidden lg:flex flex-col justify-between bg-green-950 text-white p-10">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 rise">
             <div className="h-14 px-3 rounded-xl bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-8 w-auto" /></div>
             <div>
               <p className="font-bold text-lg leading-tight">{COMPANY.name}</p>
@@ -39,6 +39,7 @@ export default function Login() {
           <h2 className="font-display text-4xl font-bold mt-16 leading-tight max-w-md">Every trip, every paper, in one place.</h2>
           <p className="text-slate-300 mt-4 text-base max-w-md">Write LR and TCC, check vehicle papers, see where each truck is. Built for the A.H. team.</p>
         </div>
+        <div className="road -mx-10" aria-hidden="true"><div className="truck"><Truck className="w-14 h-14" strokeWidth={1.5} /></div></div>
         <div className="text-xs text-slate-400 space-y-0.5">
           <p>{COMPANY.address}</p>
           <p>GSTIN {COMPANY.gstin} · PAN {COMPANY.pan}</p>

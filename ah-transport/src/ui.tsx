@@ -1,6 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 
+export function Plate({ no, large }: { no: string; large?: boolean }) {
+  const t = (no || "").toUpperCase().replace(/\s+/g, "");
+  const m = t.match(/^([A-Z]{2})(\d{2})([A-Z]{1,3})(\d{4})$/);
+  return <span className={`plate ${large ? "plate-lg" : ""}`} translate="no"><span>{m ? `${m[1]} ${m[2]} ${m[3]} ${m[4]}` : t || "—"}</span></span>;
+}
+function useCountUp(n: number) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { setV(n); return; }
+    let raf = 0; const t0 = performance.now();
+    const step = (t: number) => { const k = Math.min(1, (t - t0) / 700); setV(Math.round(n * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step); return () => cancelAnimationFrame(raf);
+  }, [n]);
+  return v;
+}
+function CountUp({ value }: { value: string | number }) { const n = typeof value === "number" ? value : NaN; const v = useCountUp(isNaN(n) ? 0 : n); return <>{isNaN(n) ? value : v}</>; }
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`bg-white rounded-xl border border-slate-200 ${className}`}>{children}</div>;
 }
@@ -170,7 +186,7 @@ export function Stat({ label, value, icon, tone = "green", sub }: { label: strin
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-slate-500 leading-tight">{label}</p>
-          <p className="font-display text-3xl font-bold text-slate-900 mt-1 tabular-nums">{value}</p>
+          <p className="font-display text-3xl font-bold text-slate-900 mt-1 tabular-nums"><CountUp value={value} /></p>
           {sub && <p className="text-[11px] text-gray-500 mt-0.5">{sub}</p>}
         </div>
         {icon && <div className={`p-2 rounded-lg ${tones[tone]} shrink-0`}>{icon}</div>}
