@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Button, Stat, Table, Textarea, Badge } from "../ui";
+import { Plate, Card, PageHeader, Button, Stat, Table, Textarea, Badge } from "../ui";
 import { MapPin, ShieldCheck, Navigation, Info, RefreshCw, Users } from "lucide-react";
 import TrackActions from "../components/TrackActions";
 import { ago } from "../tracking";
@@ -56,7 +56,7 @@ export default function Tracking() {
                 return (
                   <tr key={d.id} onClick={() => l && setSel(d.id)} className={`${l ? "cursor-pointer" : ""} ${selDriver?.id === d.id ? "bg-green-50" : "hover:bg-gray-50"}`}>
                     <td className="px-3 py-2 text-xs font-semibold">{d.name}<span className="block text-[10px] font-normal text-gray-500">{d.mobile}</span></td>
-                    <td className="px-3 py-2 text-xs">{veh(d.vehicleId)}</td>
+                    <td className="px-3 py-2 text-xs"><Plate no={veh(d.vehicleId)} /></td>
                     <td className="px-3 py-2 text-xs font-mono">{l ? `${l.lat.toFixed(4)}, ${l.lng.toFixed(4)}` : "—"}</td>
                     <td className="px-3 py-2 text-xs">{l ? <Badge cls={ago(l.updated).live ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}>{ago(l.updated).text}</Badge> : "—"}</td>
                     <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}><TrackActions driver={d} compact /></td>

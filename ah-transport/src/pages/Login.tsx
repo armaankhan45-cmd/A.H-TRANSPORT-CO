@@ -5,6 +5,7 @@ import { COMPANY } from "../company";
 import { Button, Input, Field } from "../ui";
 import { Lock, Mail } from "lucide-react";
 import Contours from "../components/Contours";
+import { Lock, Mail, Truck } from "lucide-react";
 
 const DEMO = [
   { role: "Super Admin", email: "admin@ahtransportco.com", pass: "admin123" },
@@ -32,6 +33,9 @@ export default function Login() {
         <Contours className="absolute inset-0 w-full h-full" />
         <div className="relative">
           <div className="flex items-center gap-3">
+      <div className="hidden lg:flex flex-col justify-between bg-green-950 text-white p-10">
+        <div>
+          <div className="flex items-center gap-3 rise">
             <div className="h-14 px-3 rounded-xl bg-signal flex items-center justify-center shrink-0"><img src={logoDark} alt="A.H. Transport Co." className="h-8 w-auto" /></div>
             <div>
               <p className="font-bold text-lg leading-tight">{COMPANY.name}</p>
@@ -42,6 +46,8 @@ export default function Login() {
           <p className="text-slate-300 mt-4 text-base max-w-md">Write LR and TCC, check vehicle papers, see where each truck is. Built for the A.H. team.</p>
         </div>
         <div className="relative text-xs text-slate-400 space-y-0.5">
+        <div className="road -mx-10" aria-hidden="true"><div className="truck"><Truck className="w-14 h-14" strokeWidth={1.5} /></div></div>
+        <div className="text-xs text-slate-400 space-y-0.5">
           <p>{COMPANY.address}</p>
           <p>GSTIN {COMPANY.gstin} · PAN {COMPANY.pan}</p>
           <p>{COMPANY.phones.join(" · ")}</p>

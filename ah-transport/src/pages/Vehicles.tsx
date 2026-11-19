@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../store";
-import { Card, PageHeader, Button, Input, Select, Field, Textarea, Modal, Table, Badge, statusBadge, SearchBox, Confirm, FileField, Tabs, KV, Empty, Empty as EmptyBox } from "../ui";
+import { Plate, Card, PageHeader, Button, Input, Select, Field, Textarea, Modal, Table, Badge, statusBadge, SearchBox, Confirm, FileField, Tabs, KV, Empty, Empty as EmptyBox } from "../ui";
 import { Plus, Pencil, Trash2, Power, Eye, FileText, Truck, Wrench, Route, Upload, History, AlertTriangle } from "lucide-react";
 import { VEHICLE_TYPES, VEHICLE_STATUSES, DOC_TYPES, durationDays, expiryInfo, fmtDate, fmtINR, todayISO, uid, daysLeft } from "../company";
 import type { Vehicle, VehicleDoc } from "../types";
@@ -86,7 +86,7 @@ export default function Vehicles() {
                     <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center overflow-hidden shrink-0">
                       {v.photo ? <img src={v.photo} alt="" className="w-full h-full object-cover" /> : <Truck className="w-4 h-4 text-green-700" />}
                     </div>
-                    <div><p className="font-semibold text-gray-900">{v.regNo}</p><p className="text-[11px] text-gray-500">{v.chassis}</p></div>
+                    <div><Plate no={v.regNo} /><p className="text-[11px] text-gray-500">{v.chassis}</p></div>
                   </div>
                 </td>
                 <td className="px-3 py-2 text-xs">{v.type} · {v.capacity}</td>

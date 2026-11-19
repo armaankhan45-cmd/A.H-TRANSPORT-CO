@@ -1,4 +1,5 @@
 import { useStore } from "../store";
+import { Plate } from "../ui";
 import { daysLeft, fmtDate } from "../company";
 import { askNew } from "../launch";
 import InstallApp from "../components/InstallApp";
@@ -38,14 +39,28 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
         </div>
       )}
 
+      {(() => {
+        const trip = db.vehicles.filter((v) => v.status === "On Trip");
+        const dn = (id: string) => db.drivers.find((d) => d.vehicleId === id)?.name || "No driver set";
+        return (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 mb-6">
+            <h2 className="font-display text-lg font-bold flex items-center gap-2">{trip.length > 0 && <span className="live-dot" aria-hidden="true" />}On the road now <span className="text-slate-400 font-medium tabular-nums">{trip.length}</span></h2>
+            {trip.length === 0 ? <p className="text-slate-500 mt-2">No truck is on a trip right now.</p> : (
+              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+                {trip.map((v) => <div key={v.id} className="flex items-center gap-3"><Plate no={v.regNo} /><span className="text-sm text-slate-600">{dn(v.id)}</span></div>)}
+              </div>)}
+          </div>);
+      })()}
+
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <button onClick={go("lr", true)} className="group flex items-center gap-4 rounded-xl bg-signal text-slate-900 p-5 text-left hover:bg-signal-dark transition">
+          <div className="grid sm:grid-cols-2 gap-3 rise">
+            <button onClick={go("lr", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-signal text-slate-900 p-5 text-left hover:bg-signal-dark transition">
               <FilePlus2 className="w-10 h-10 shrink-0" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New LR</b><span className="text-sm">Transport receipt</span></span>
             </button>
             <button onClick={go("tcc", true)} className="group flex items-center gap-4 rounded-xl bg-slate-900 text-white p-5 text-left hover:bg-slate-800 transition">
+            <button onClick={go("tcc", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-green-950 text-white p-5 text-left hover:bg-green-900 transition">
               <Droplets className="w-10 h-10 shrink-0 text-signal" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New TCC</b><span className="text-sm text-slate-200">Tanker cleaning certificate</span></span>
             </button>
