@@ -19,9 +19,9 @@ export function Button({ children, onClick, variant = "primary", className = "",
   children: React.ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" | "ghost" | "success"; className?: string; type?: "button" | "submit"; disabled?: boolean; size?: "sm" | "md";
 }) {
   const v: Record<string, string> = {
-    primary: "bg-signal text-slate-900 font-semibold hover:bg-signal-dark shadow-[inset_0_-1px_0_rgba(0,0,0,.12)]",
+    primary: "key bg-signal text-slate-900 font-semibold hover:bg-signal-dark",
     success: "bg-green-600 text-white hover:bg-green-700",
-    secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400",
+    secondary: "key bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 hover:border-slate-400",
     danger: "bg-red-600 text-white hover:bg-red-700",
     ghost: "text-gray-600 hover:bg-gray-100",
   };
@@ -37,7 +37,7 @@ export function Field({ label, children, required, hint, className = "" }: { lab
     </label>
   );
 }
-const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-10 placeholder:text-slate-400 hover:border-slate-400 focus:border-green-700 focus:ring-2 focus:ring-signal/70 disabled:bg-slate-100 disabled:text-slate-500";
+const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm min-h-10 placeholder:text-slate-400 hover:border-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-signal/60 disabled:bg-slate-100 disabled:text-slate-500";
 export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const el = <input {...p} className={`${inputCls} ${p.className || ""}`} />;
   if (p.type !== "date") return el;
@@ -78,7 +78,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 overflow-y-auto overscroll-contain" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
       <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-screen sm:min-h-0`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
           <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
