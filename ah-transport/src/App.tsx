@@ -31,22 +31,22 @@ import Tracking from "./pages/Tracking";
 import Admin from "./pages/Admin";
 import DriverPortal from "./pages/DriverPortal";
 
-export const NAV: { key: string; label: string; icon: typeof Truck; core?: boolean }[] = [
+export const NAV: { key: string; label: string; icon: typeof Truck; core?: boolean; hidden?: boolean }[] = [
   { key: "dashboard", label: "Home", icon: LayoutDashboard, core: true },
   { key: "lr", label: "LR", icon: ReceiptText, core: true },
   { key: "tcc", label: "TCC", icon: Droplets, core: true },
   { key: "vehicles", label: "Vehicles", icon: Truck, core: true },
   { key: "drivers", label: "Drivers", icon: Users, core: true },
   { key: "tracking", label: "Live location", icon: MapPin, core: true },
-  { key: "expiry", label: "Papers & Expiry", icon: CalendarClock },
-  { key: "driverreports", label: "Driver reports", icon: Camera },
-  { key: "documents", label: "Vehicle Papers", icon: FileText },
-  { key: "maintenance", label: "Maintenance", icon: Wrench },
+  { key: "expiry", label: "Papers & Expiry", icon: CalendarClock, hidden: true },
+  { key: "driverreports", label: "Driver reports", icon: Camera, hidden: true },
+  { key: "documents", label: "Vehicle Papers", icon: FileText, hidden: true },
+  { key: "maintenance", label: "Maintenance", icon: Wrench, hidden: true },
   { key: "assignments", label: "Assignments", icon: Link2 },
   { key: "trips", label: "Trips", icon: Route },
-  { key: "customers", label: "Customers", icon: Building2 },
-  { key: "salary", label: "Salary", icon: Wallet },
-  { key: "expenses", label: "Expenses", icon: IndianRupee },
+  { key: "customers", label: "Customers", icon: Building2, hidden: true },
+  { key: "salary", label: "Salary", icon: Wallet, hidden: true },
+  { key: "expenses", label: "Expenses", icon: IndianRupee, hidden: true },
   { key: "reports", label: "Download reports", icon: BarChart3 },
   { key: "overview", label: "Charts", icon: BarChart3 },
   { key: "admin", label: "Users & Settings", icon: ShieldCheck },
@@ -159,7 +159,7 @@ function Shell() {
         commands={[
           { label: "New LR", sub: "Action", run: () => { askNew(); setPage("lr"); } },
           { label: "New TCC", sub: "Action", run: () => { askNew(); setPage("tcc"); } },
-          ...nav.map((n) => ({ label: n.label, sub: "Go to page", run: () => setPage(n.key) })),
+          ...nav.filter((n) => !n.hidden).map((n) => ({ label: n.label, sub: "Go to page", run: () => setPage(n.key) })),
         ]}
         find={(t) => searchResultsFor(t).map((r) => ({ label: r.label, sub: r.sub, run: () => setPage(r.page) }))} />
       {/* Sidebar */}
@@ -184,7 +184,7 @@ function Shell() {
         )}
         <nav className="flex-1 overflow-y-auto py-2 px-2" aria-label="Main">
           {GROUPS.map((g) => {
-            const items = nav.filter((n) => g.keys.includes(n.key));
+            const items = nav.filter((n) => g.keys.includes(n.key) && !n.hidden);
             if (!items.length) return null;
             return (
               <div key={g.title} className="mb-2">
