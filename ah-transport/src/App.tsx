@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import { newCount } from "./reports";
 import DriverReports from "./pages/DriverReports";
 import { askNew } from "./launch";
+import CommandPalette from "./components/CommandPalette";
 import Vehicles from "./pages/Vehicles";
 import Documents from "./pages/Documents";
 import Maintenance from "./pages/Maintenance";
@@ -49,6 +50,13 @@ export const NAV: { key: string; label: string; icon: typeof Truck; core?: boole
   { key: "reports", label: "Download reports", icon: BarChart3 },
   { key: "overview", label: "Charts", icon: BarChart3 },
   { key: "admin", label: "Users & Settings", icon: ShieldCheck },
+];
+
+const GROUPS: { title: string; keys: string[] }[] = [
+  { title: "Daily work", keys: ["dashboard", "lr", "tcc", "trips"] },
+  { title: "Fleet", keys: ["vehicles", "drivers", "tracking", "expiry", "documents", "maintenance", "assignments", "driverreports"] },
+  { title: "Business", keys: ["customers", "expenses", "salary", "reports", "overview"] },
+  { title: "Settings", keys: ["admin"] },
 ];
 
 const TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.key, n.label]));
@@ -89,8 +97,8 @@ function Shell() {
     return out;
   }, [db]);
 
-  const searchResults = useMemo(() => {
-    const q = globalQ.trim().toLowerCase();
+  const searchResultsFor = (raw: string) => {
+    const q = raw.trim().toLowerCase();
     if (!q) return [];
     const r: { label: string; sub: string; page: string }[] = [];
     db.vehicles.filter((v) => v.regNo.toLowerCase().includes(q)).slice(0, 6).forEach((v) => r.push({ label: v.regNo, sub: `${v.type} · ${v.status}`, page: "vehicles" }));
@@ -100,7 +108,17 @@ function Shell() {
     db.trips.filter((t) => t.tripNo.toLowerCase().includes(q)).slice(0, 6).forEach((t) => r.push({ label: t.tripNo, sub: `Trip · ${t.customer}`, page: "trips" }));
     db.customers.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6).forEach((c) => r.push({ label: c.name, sub: "Customer", page: "customers" }));
     return r;
-  }, [globalQ, db]);
+  };
+  const searchResults = useMemo(() => searchResultsFor(globalQ), [globalQ, db]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [palette, setPalette] = useState(false);
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement; const typing = /INPUT|TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable;
+      if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !typing)) { e.preventDefault(); setPalette(true); }
+    };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, []);
 
   if (booting) return <div className="min-h-screen grid place-items-center text-sm text-gray-500">Loading…</div>;
   if (!user) return <Login />;
@@ -137,6 +155,13 @@ function Shell() {
   return (
     <div className="min-h-screen flex bg-[#f4efe4]">
       <a href="#main" className="skip">Skip to content</a>
+      <CommandPalette open={palette} onClose={() => setPalette(false)}
+        commands={[
+          { label: "New LR", sub: "Action", run: () => { askNew(); setPage("lr"); } },
+          { label: "New TCC", sub: "Action", run: () => { askNew(); setPage("tcc"); } },
+          ...nav.map((n) => ({ label: n.label, sub: "Go to page", run: () => setPage(n.key) })),
+        ]}
+        find={(t) => searchResultsFor(t).map((r) => ({ label: r.label, sub: r.sub, run: () => setPage(r.page) }))} />
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 pt-[env(safe-area-inset-top)] bg-white text-slate-700 border-r border-slate-200 transform transition-transform lg:translate-x-0 ${sidebar ? "translate-x-0" : "-translate-x-full"} flex flex-col`}>
         <div className="px-4 py-4 border-b border-slate-200 flex items-center gap-2.5">
@@ -157,32 +182,27 @@ function Shell() {
             {firm.placeholder && <p className="mt-1 text-[10px] text-amber-300">Firm details are placeholders - update them in company.ts.</p>}
           </div>
         )}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" aria-label="Main">
-          {core.map((n) => {
-            const Icon = n.icon;
-            const activeItem = page === n.key;
+        <nav className="flex-1 overflow-y-auto py-2 px-2" aria-label="Main">
+          {GROUPS.map((g) => {
+            const items = nav.filter((n) => g.keys.includes(n.key));
+            if (!items.length) return null;
             return (
-              <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] ${activeItem ? "bg-signal text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`} aria-current={activeItem ? "page" : undefined}>
-                <Icon className="w-5 h-5 shrink-0" /> <span className="truncate">{n.label}</span>
-              </button>
+              <div key={g.title} className="mb-2">
+                <p className="px-3 pt-3 pb-1 text-xs font-semibold text-slate-400">{g.title}</p>
+                {items.map((n) => {
+                  const Icon = n.icon; const on = page === n.key;
+                  return (
+                    <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }} aria-current={on ? "page" : undefined}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14.5px] ${on ? "bg-signal text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
+                      <Icon className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> <span className="truncate">{n.label}</span>
+                      {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
+                      {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
-          <details className="mt-2 pt-2 border-t border-slate-200" open={more.some((n) => n.key === page)}>
-            <summary className="px-3 py-2 text-sm text-slate-500 cursor-pointer select-none hover:text-slate-900">More</summary>
-            {more.map((n) => {
-              const Icon = n.icon;
-              const activeItem = page === n.key;
-              return (
-                <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${activeItem ? "bg-signal text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
-                  <Icon className="w-4 h-4 shrink-0" /> <span className="truncate">{n.label}</span>
-                  {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
-                  {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
-                </button>
-              );
-            })}
-          </details>
         </nav>
         <div className="p-3 border-t border-slate-200 text-xs text-slate-500">
           <p className="truncate">{firm.email}</p>
@@ -199,6 +219,7 @@ function Shell() {
             <div className="hidden md:block font-display font-semibold text-lg text-slate-900 tracking-tight">{user.role === "Driver" ? "Driver app" : (TITLES[page] || "Home")}</div>
             <div className="relative ml-auto w-40 sm:w-72">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+              <kbd className="hidden xl:block absolute right-2.5 top-2.5 text-[11px] text-slate-400 border border-slate-300 rounded px-1 pointer-events-none">Ctrl K</kbd>
               <input aria-label="Search" value={globalQ} onChange={(e) => setGlobalQ(e.target.value)} placeholder="Search vehicle, driver, LR…"
                 className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 py-2 text-sm min-h-10 focus:bg-white focus:border-green-700" />
               {globalQ && (

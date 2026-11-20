@@ -19,6 +19,14 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
   const snooze = (() => { try { return Number(localStorage.getItem("ah_bk_snooze")) || 0; } catch { return 0; } })();
   const backupDue = Date.now() - lastBackup > 7 * 86400000 && Date.now() > snooze;
   const go = (page: string, isNew = false) => () => { if (isNew) askNew(); onNavigate(page); };
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const kpis = [
+    { label: "Vehicles available", value: db.vehicles.filter((v) => v.status === "Available").length, of: db.vehicles.length, page: "vehicles" },
+    { label: "On a trip", value: db.vehicles.filter((v) => v.status === "On Trip").length, page: "vehicles" },
+    { label: "LRs this month", value: db.lrs.filter((l) => l.date.startsWith(thisMonth)).length, page: "lr" },
+    { label: "Papers need action", value: due.length, page: "expiry", warn: due.length > 0 },
+  ];
+  const recent = [...db.lrs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const links = [
     { page: "vehicles", label: "Vehicles", n: `${db.vehicles.length}`, icon: Truck },
     { page: "drivers", label: "Drivers", n: `${db.drivers.length}`, icon: Users },
@@ -52,6 +60,15 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
           </div>);
       })()}
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {kpis.map((k) => (
+          <button key={k.label} onClick={go(k.page)} className="card-lift text-left rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-400">
+            <span className="block text-[13px] font-medium text-slate-500">{k.label}</span>
+            <span className={`block font-display text-3xl font-bold mt-1 tabular-nums ${k.warn ? "text-red-600" : ""}`}>{k.value}{k.of !== undefined && <span className="text-base font-medium text-slate-400"> / {k.of}</span>}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3 rise">
@@ -73,6 +90,20 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
                 <span className="text-sm text-slate-500 tabular-nums">{l.n}</span>
                 <ChevronRight className="w-5 h-5 text-slate-400" />
               </button>); })}
+          </div>
+
+          <div>
+            <h2 className="font-display text-xl font-bold mb-2">Latest LRs</h2>
+            <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-200">
+              {recent.length === 0 && <p className="p-4 text-slate-500">No LR yet. Tap New LR to write the first one.</p>}
+              {recent.map((l) => (
+                <button key={l.id} onClick={go("lr")} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50">
+                  <span className="fig font-medium w-24 shrink-0">{l.lrNo}</span>
+                  <span className="flex-1 min-w-0 truncate">{l.consignor} <span className="text-slate-400">→</span> {l.consignee}</span>
+                  <span className="text-sm text-slate-500 shrink-0">{fmtDate(l.date)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
