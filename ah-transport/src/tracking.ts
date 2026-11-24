@@ -32,6 +32,19 @@ ${url}`;
   return `https://wa.me/${full}?text=${encodeURIComponent(text)}`;
 }
 
+const fullNumber = (mobile: string) => { const num = mobile.replace(/\D/g, "").replace(/^0+/, ""); return num.length === 10 ? "91" + num : num; };
+
+/** Plain-text message for SMS (no special characters, so it stays in cheap 1-2 SMS parts). */
+export const smsText = (name: string, url: string) => `AH Transport: Hi ${name}, tap Yes on this link to share truck location: ${url}`;
+
+/** sms: link that opens the phone's own messaging app with the driver's number and the text already filled in. */
+export function smsLink(mobile: string, name: string, url: string) {
+  const sep = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? "&" : "?";   // iPhone and Android differ here
+  return `sms:+${fullNumber(mobile)}${sep}body=${encodeURIComponent(smsText(name, url))}`;
+}
+
+export const isPhone = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 export function ago(iso: string): { text: string; live: boolean } {
   const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (m < 5) return { text: "Live now", live: true };
