@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 export function Plate({ no, large }: { no: string; large?: boolean }) {
   const t = (no || "").toUpperCase().replace(/\s+/g, "");
@@ -16,7 +17,7 @@ function useCountUp(n: number) {
   }, [n]);
   return v;
 }
-function CountUp({ value }: { value: string | number }) { const n = typeof value === "number" ? value : NaN; const v = useCountUp(isNaN(n) ? 0 : n); return <>{isNaN(n) ? value : v}</>; }
+export function CountUp({ value }: { value: string | number }) { const n = typeof value === "number" ? value : NaN; const v = useCountUp(isNaN(n) ? 0 : n); return <>{isNaN(n) ? value : v}</>; }
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`bg-white rounded-xl border border-slate-200 ${className}`}>{children}</div>;
 }
@@ -94,13 +95,13 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
-      <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-screen sm:min-h-0`}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-dvh sm:min-h-0`}>
+        <div className="flex items-center justify-between px-4 py-3 mhead border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
           <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
           <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
         </div>
-        <div className="p-4 sm:max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className="p-4 sm:max-h-[80dvh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
@@ -129,6 +130,7 @@ export function SearchBox({ value, onChange, placeholder = "Search…" }: { valu
   );
 }
 export function Table({ headers, children, empty }: { headers: string[]; children: React.ReactNode; empty?: boolean }) {
+  const [bodyRef] = useAutoAnimate<HTMLTableSectionElement>({ duration: 200 });   // rows slide when added, removed or sorted
   const ref = useRef<HTMLTableElement>(null);
   // Phones show every row as a card: tag each cell with its column title so the card can print it as a label.
   useEffect(() => {
@@ -144,7 +146,7 @@ export function Table({ headers, children, empty }: { headers: string[]; childre
             {headers.map((h) => <th key={h} className="px-3 py-2.5 font-semibold whitespace-nowrap">{h}</th>)}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 [&_tr]:transition-colors [&_tr:hover]:bg-amber-50/40">{children}</tbody>
+        <tbody ref={bodyRef} className="divide-y divide-slate-100 [&_tr]:transition-colors [&_tr:hover]:bg-amber-50/40">{children}</tbody>
       </table>
       {empty && <Empty />}
     </div>

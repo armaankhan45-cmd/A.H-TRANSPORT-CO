@@ -27,7 +27,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-gray-100">
+    <div className="min-h-dvh grid lg:grid-cols-2 bg-gray-100">
       <div className="hidden lg:flex flex-col justify-between bg-slate-900 text-white p-10 relative overflow-hidden">
         <Contours className="absolute inset-0 w-full h-full" />
         <div className="relative">

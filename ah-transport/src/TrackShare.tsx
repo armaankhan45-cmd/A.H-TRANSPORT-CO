@@ -152,7 +152,7 @@ export default function TrackShare({ token }: { token: string }) {
 
   const big = "w-full rounded-2xl text-white font-extrabold py-5 text-2xl leading-tight active:scale-[0.98] transition";
   return (
-    <div className="min-h-screen bg-green-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-dvh bg-green-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
         <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
         {info === undefined && <p className="py-10 text-lg text-gray-500">…</p>}

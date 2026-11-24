@@ -120,7 +120,7 @@ function Shell() {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   }, []);
 
-  if (booting) return <div className="min-h-screen grid place-items-center text-sm text-gray-500">Loading…</div>;
+  if (booting) return <div className="min-h-dvh grid place-items-center text-sm text-gray-500">Loading…</div>;
   if (!user) return <Login />;
 
   const allowed = PERMISSIONS[user.role];
@@ -153,7 +153,7 @@ function Shell() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#f4efe4]">
+    <div className="min-h-dvh flex bg-[#f4efe4]">
       <a href="#main" className="skip">Skip to content</a>
       <CommandPalette open={palette} onClose={() => setPalette(false)}
         commands={[
@@ -285,7 +285,7 @@ function Shell() {
         ))}
       </div>
       {user.role !== "Driver" && (
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 grid grid-cols-6 no-print">
+        <nav className="bottomnav lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 grid grid-cols-6 no-print">
           {core.map((n) => { const Icon = n.icon; const on = page === n.key; return (
             <button key={n.key} onClick={() => setPage(n.key)} className={`flex flex-col items-center gap-0.5 py-2 border-t-4 ${on ? "border-signal text-green-900" : "border-transparent text-slate-500"}`}>
               <Icon className="w-6 h-6" strokeWidth={on ? 2.4 : 1.8} /><span className="text-[11px] font-semibold leading-none">{n.key === "tracking" ? "Live" : n.label}</span>
@@ -298,7 +298,7 @@ function Shell() {
 
 function Problem({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="min-h-screen grid place-items-center bg-gray-100 p-6">
+    <div className="min-h-dvh grid place-items-center bg-gray-100 p-6">
       <div className="max-w-md bg-white rounded-xl shadow p-6">
         <h1 className="text-lg font-bold text-red-700">{title}</h1>
         <p className="text-sm text-gray-700 mt-2 break-words">{detail}</p>
