@@ -10,7 +10,7 @@ export default function DriverSetup({ onToken }: { onToken: (t: string) => void 
     if (m) onToken(m[1]); else setErr("This is not the right link. Copy the whole link from WhatsApp.");
   };
   return (
-    <div className="min-h-screen bg-green-50 grid place-items-center p-4">
+    <div className="min-h-dvh bg-green-50 grid place-items-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
         <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
         <p className="text-xl font-bold mt-4">Paste the link the office sent you</p>

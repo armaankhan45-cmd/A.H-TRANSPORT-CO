@@ -1,5 +1,5 @@
 import { useStore } from "../store";
-import { Plate } from "../ui";
+import { Plate, CountUp } from "../ui";
 import { daysLeft, fmtDate } from "../company";
 import { askNew } from "../launch";
 import InstallApp from "../components/InstallApp";
@@ -60,11 +60,11 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
           </div>);
       })()}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="rise grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {kpis.map((k) => (
           <button key={k.label} onClick={go(k.page)} className="card-lift text-left rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-400">
             <span className="block text-[13px] font-medium text-slate-500">{k.label}</span>
-            <span className={`block font-display text-3xl font-bold mt-1 tabular-nums ${k.warn ? "text-red-600" : ""}`}>{k.value}{k.of !== undefined && <span className="text-base font-medium text-slate-400"> / {k.of}</span>}</span>
+            <span className={`block font-display text-3xl font-bold mt-1 tabular-nums ${k.warn ? "text-red-600" : ""}`}><CountUp value={k.value} />{k.of !== undefined && <span className="text-base font-medium text-slate-400"> / {k.of}</span>}</span>
           </button>
         ))}
       </div>
