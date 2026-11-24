@@ -24,7 +24,7 @@ export default function DriverReports() {
       <PageHeader title="Driver reports" subtitle="Photos, toll receipts and breakdowns sent from the drivers' links"
         actions={<Button variant="secondary" onClick={() => void load()}><RefreshCw className="w-4 h-4" /> Refresh</Button>} />
       <div className="inline-flex rounded-md border border-slate-300 overflow-hidden mb-4">
-        {(["New", "Done", "All"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium ${tab === t ? "bg-green-900 text-white" : "bg-white hover:bg-slate-50"}`}>{t}{t === "New" && rows ? ` (${rows.filter((r) => r.status === "New").length})` : ""}</button>)}
+        {(["New", "Done", "All"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium ${tab === t ? "bg-ink text-white" : "bg-white hover:bg-slate-50"}`}>{t}{t === "New" && rows ? ` (${rows.filter((r) => r.status === "New").length})` : ""}</button>)}
       </div>
       {rows === null && <p className="text-slate-500">Loading…</p>}
       {rows && list.length === 0 && <Card className="p-6 text-slate-600">Nothing here. Reports appear when a driver sends one from their link.</Card>}

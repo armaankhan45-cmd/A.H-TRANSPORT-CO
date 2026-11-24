@@ -4,7 +4,7 @@ import { StoreProvider, useStore, PERMISSIONS, CLOUD } from "./store";
 import { CONFIG_ERROR } from "./lib/supabase";
 import {
   LayoutDashboard, Truck, FileText, Wrench, CalendarClock, Users, Link2, ReceiptText, Droplets,
-  Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2, Camera,
+  Route, Building2, Wallet, IndianRupee, BarChart3, MapPin, ShieldCheck, Bell, Menu, LogOut, Search, X, RefreshCw, UserCircle2, Camera, Sun, Moon,
 } from "lucide-react";
 import { daysLeft, fmtDate } from "./company";
 import { Badge, Button } from "./ui";
@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import { newCount } from "./reports";
 import DriverReports from "./pages/DriverReports";
 import { askNew } from "./launch";
+import { getTheme, applyTheme } from "./theme";
 import CommandPalette from "./components/CommandPalette";
 import Vehicles from "./pages/Vehicles";
 import Documents from "./pages/Documents";
@@ -112,6 +113,7 @@ function Shell() {
   const searchResults = useMemo(() => searchResultsFor(globalQ), [globalQ, db]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [palette, setPalette] = useState(false);
+  const [, setThemeTick] = useState(0);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement; const typing = /INPUT|TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable;
@@ -153,7 +155,7 @@ function Shell() {
   };
 
   return (
-    <div className="min-h-dvh flex bg-[#f4efe4]">
+    <div className="min-h-dvh flex bg-page">
       <a href="#main" className="skip">Skip to content</a>
       <CommandPalette open={palette} onClose={() => setPalette(false)}
         commands={[
@@ -188,15 +190,15 @@ function Shell() {
             if (!items.length) return null;
             return (
               <div key={g.title} className="mb-2">
-                <p className="px-3 pt-3 pb-1 text-xs font-semibold text-slate-400">{g.title}</p>
+                <p className="px-3 pt-3 pb-1 text-xs font-semibold text-slate-500">{g.title}</p>
                 {items.map((n) => {
                   const Icon = n.icon; const on = page === n.key;
                   return (
                     <button key={n.key} onClick={() => { setPage(n.key); setSidebar(false); }} aria-current={on ? "page" : undefined}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14.5px] ${on ? "bg-signal text-slate-900 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[14.5px] ${on ? "bg-signal text-[#0b1017] font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
                       <Icon className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> <span className="truncate">{n.label}</span>
-                      {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
-                      {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
+                      {n.key === "driverreports" && newReports > 0 && <span className="ml-auto bg-red-600 text-white text-[10px] px-1.5 rounded-full">{newReports}</span>}
+                      {n.key === "expiry" && notifications.length > 0 && <span className="ml-auto bg-red-600 text-white text-[10px] px-1.5 rounded-full">{notifications.length}</span>}
                     </button>
                   );
                 })}
@@ -213,13 +215,13 @@ function Shell() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-[#fdfcf9] border-b border-slate-200">
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200">
           <div className="flex items-center gap-2 px-3 sm:px-5 py-2.5">
             <button aria-label="Open menu" className="lg:hidden p-2 rounded-lg hover:bg-slate-100" onClick={() => setSidebar(true)}><Menu className="w-5 h-5" /></button>
             <div className="hidden md:block font-display font-semibold text-lg text-slate-900 tracking-tight">{user.role === "Driver" ? "Driver app" : (TITLES[page] || "Home")}</div>
             <div className="relative ml-auto w-40 sm:w-72">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-              <kbd className="hidden xl:block absolute right-2.5 top-2.5 text-[11px] text-slate-400 border border-slate-300 rounded px-1 pointer-events-none">Ctrl K</kbd>
+              <kbd className="hidden xl:block absolute right-2.5 top-2.5 text-[11px] text-slate-600 border border-slate-300 rounded px-1 pointer-events-none">Ctrl K</kbd>
               <input aria-label="Search" value={globalQ} onChange={(e) => setGlobalQ(e.target.value)} placeholder="Search vehicle, driver, LR…"
                 className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 py-2 text-sm min-h-10 focus:bg-white focus:border-green-700" />
               {globalQ && (
@@ -235,9 +237,10 @@ function Shell() {
               )}
             </div>
             <div className="relative">
-              <button aria-label="Notifications" onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-slate-100">
+              <button aria-label="Switch light or dark" title="Light / dark" onClick={() => { const n = getTheme() === "dark" ? "light" : "dark"; applyTheme(n); setThemeTick((x) => x + 1); }} className="p-2 rounded-lg hover:bg-slate-100">{getTheme() === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}</button>
+            <button aria-label="Notifications" onClick={() => setNotifOpen((v) => !v)} className="relative p-2 rounded-lg hover:bg-slate-100">
                 <Bell className="w-5 h-5 text-gray-600" />
-                {notifications.length > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">{notifications.length > 9 ? "9+" : notifications.length}</span>}
+                {notifications.length > 0 && <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-[#b91c1c] text-white text-[10px] flex items-center justify-center">{notifications.length > 9 ? "9+" : notifications.length}</span>}
               </button>
               {notifOpen && (
                 <div className="absolute right-0 mt-1 w-80 sm:w-96 bg-white border border-gray-200 rounded-xl shadow-2xl z-40 max-h-[70vh] overflow-y-auto">
@@ -281,7 +284,7 @@ function Shell() {
       {/* toasts */}
       <div className="fixed bottom-4 right-4 z-[70] space-y-2">
         {toasts.map((t) => (
-          <div key={t.id} className={`px-4 py-2.5 rounded-lg shadow-lg text-sm text-white ${t.type === "error" ? "bg-red-600" : "bg-green-700"}`}>{t.msg}</div>
+          <div key={t.id} className={`px-4 py-2.5 rounded-lg shadow-lg text-sm text-white ${t.type === "error" ? "bg-red-600" : "bg-ink"}`}>{t.msg}</div>
         ))}
       </div>
       {user.role !== "Driver" && (
@@ -302,7 +305,7 @@ function Problem({ title, detail }: { title: string; detail: string }) {
       <div className="max-w-md bg-white rounded-xl shadow p-6">
         <h1 className="text-lg font-bold text-red-700">{title}</h1>
         <p className="text-sm text-gray-700 mt-2 break-words">{detail}</p>
-        <button onClick={() => location.reload()} className="mt-4 px-4 py-2 rounded-lg bg-green-800 text-white text-sm">Reload</button>
+        <button onClick={() => location.reload()} className="mt-4 px-4 py-2 rounded-lg bg-ink text-white text-sm">Reload</button>
       </div>
     </div>
   );

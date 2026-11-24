@@ -17,7 +17,7 @@ export default function CommandPalette({ open, onClose, commands, find }: { open
   if (!open) return null;
   const go = (c?: Cmd) => { if (!c) return; onClose(); c.run(); };
   return (
-    <div className="fixed inset-0 z-[80] bg-slate-900/50 flex items-start justify-center p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-[12vh]" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label="Quick search">
+    <div className="fixed inset-0 z-[80] bg-black/60 flex items-start justify-center p-3 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-[12vh]" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label="Quick search">
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden" onMouseDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 px-4 border-b border-slate-200">
           <Search className="w-5 h-5 text-slate-400" aria-hidden="true" />
@@ -30,7 +30,7 @@ export default function CommandPalette({ open, onClose, commands, find }: { open
               else if (e.key === "Enter") go(list[i]);
               else if (e.key === "Escape") onClose();
             }} />
-          <kbd className="hidden sm:block text-xs text-slate-500 border border-slate-300 rounded px-1.5 py-0.5">Esc</kbd>
+          <kbd className="hidden sm:block text-xs text-slate-600 border border-slate-300 rounded px-1.5 py-0.5">Esc</kbd>
         </div>
         <ul className="max-h-[60vh] overflow-y-auto py-1" role="listbox">
           {list.length === 0 && <li className="px-4 py-6 text-center text-sm text-slate-500">No match. Try a vehicle number, driver name or LR number.</li>}

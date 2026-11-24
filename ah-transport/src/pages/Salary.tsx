@@ -92,8 +92,8 @@ export default function Salary() {
                 <td className="px-3 py-2"><Badge cls={s.status === "Paid" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}>{s.status}</Badge></td>
                 <td className="px-3 py-2 text-xs">{s.paymentDate ? fmtDate(s.paymentDate) : "—"}<span className="block text-[10px] text-gray-500">{s.method} {s.reference}</span></td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <button onClick={() => setForm({ ...s })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
-                  {s.status !== "Paid" && <button onClick={() => markPaid(s)} className="p-1.5 rounded hover:bg-gray-100"><CheckCircle2 className="w-4 h-4 text-green-600" /></button>}
+                  <button onClick={() => setForm({ ...s })} title="Edit" aria-label="Edit" className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
+                  {s.status !== "Paid" && <button onClick={() => markPaid(s)} title="Mark paid" aria-label="Mark paid" className="p-1.5 rounded hover:bg-gray-100"><CheckCircle2 className="w-4 h-4 text-green-600" /></button>}
                 </td>
               </tr>
             ))}

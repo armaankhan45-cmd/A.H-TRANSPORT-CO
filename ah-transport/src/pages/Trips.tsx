@@ -90,10 +90,10 @@ export default function Trips() {
                 <td className="px-3 py-2">{statusBadge(t.status)}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-1">
-                    <select value={t.status} onChange={(e) => setStatus(t, e.target.value)} className="text-[10px] border border-gray-300 rounded px-1 py-0.5 max-w-28">
+                    <select aria-label="Trip status" value={t.status} onChange={(e) => setStatus(t, e.target.value)} className="text-[10px] border border-gray-300 rounded px-1 py-0.5 max-w-28">
                       {TRIP_STATUSES.map((s) => <option key={s}>{s}</option>)}
                     </select>
-                    <button onClick={() => setForm({ ...t })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
+                    <button onClick={() => setForm({ ...t })} title="Edit" aria-label="Edit" className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button>
                   </div>
                 </td>
               </tr>

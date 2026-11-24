@@ -13,7 +13,7 @@ export const setFontMode = (m: FontMode) => { mode = m; try { localStorage.setIt
 export const useFontMode = () => useSyncExternalStore((f) => { subs.add(f); return () => { subs.delete(f); }; }, () => mode);
 export function FontToggle() {
   const m = useFontMode();
-  const b = (v: FontMode, label: string) => <button type="button" onClick={() => setFontMode(v)} className={`px-3 py-1.5 text-sm font-medium ${m === v ? "bg-green-900 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}>{label}</button>;
+  const b = (v: FontMode, label: string) => <button type="button" onClick={() => setFontMode(v)} className={`px-3 py-1.5 text-sm font-medium ${m === v ? "bg-ink text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`}>{label}</button>;
   return <div className="inline-flex rounded-md border border-slate-300 overflow-hidden no-print" role="group" aria-label="Text style">{b("hand", "Handwriting")}{b("print", "Computer font")}</div>;
 }
 export const HAND = "'Caveat','Reenie Beanie',cursive";

@@ -28,7 +28,7 @@ export default function Login() {
 
   return (
     <div className="min-h-dvh grid lg:grid-cols-2 bg-gray-100">
-      <div className="hidden lg:flex flex-col justify-between bg-slate-900 text-white p-10 relative overflow-hidden">
+      <div className="hidden lg:flex flex-col justify-between bg-[#0b1017] text-white p-10 relative overflow-hidden">
         <Contours className="absolute inset-0 w-full h-full" />
         <div className="relative">
           <div className="flex items-center gap-3 rise">
