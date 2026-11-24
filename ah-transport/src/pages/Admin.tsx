@@ -1,25 +1,45 @@
 import { useState } from "react";
 import { useStore, PERMISSIONS, CLOUD } from "../store";
-import { Card, PageHeader, Table, Button, Badge, Input, Field, Select, Modal, Tabs, Stat } from "../ui";
+import { Card, PageHeader, Table, Button, Badge, Input, Field, Select, Modal, Tabs, Stat, Confirm } from "../ui";
 import { Plus, ShieldCheck, UserCog, ScrollText, Settings, Database, KeyRound } from "lucide-react";
 import { fmtDate, todayISO, uid } from "../company";
 import type { Role, User } from "../types";
+import { supabase } from "../lib/supabase";
+import { ROLE_TO_DB } from "../lib/mappers";
 
 const ROLES: Role[] = ["Super Admin", "Admin", "Office Staff", "Accounts Staff", "Driver"];
 const MODULES = ["dashboard", "vehicles", "documents", "maintenance", "expiry", "drivers", "assignments", "lr", "tcc", "trips", "customers", "salary", "expenses", "reports", "tracking", "users", "settings", "audit"];
 
 export default function Admin() {
-  const { db, set, toast, user, reset } = useStore();
+  const { db, set, toast, user, reset, reload } = useStore();
+  const [busy, setBusy] = useState(false);
+  const [delUser, setDelUser] = useState<User | null>(null);
   const [tab, setTab] = useState("Users");
   const [form, setForm] = useState<User | null>(null);
 
   const blank = (): User => ({ id: "", name: "", email: "", password: "", role: "Office Staff", active: true });
 
-  const save = () => {
+  const rpcErr = (e: { message: string } | null) => { if (e) { toast(e.message, "error"); return true; } return false; };
+  const save = async () => {
     if (!form) return;
     if (!form.name || !form.email) return toast("Name and email are required", "error");
-    if (!CLOUD && form.password.length < 6) return toast("Password must be at least 6 characters", "error");
+    if ((!CLOUD || !form.id) && form.password.length < 6) return toast("Password must be at least 6 characters", "error");
     if (db.users.some((u) => u.id !== form.id && u.email.toLowerCase() === form.email.toLowerCase())) return toast("Email already exists", "error");
+    if (CLOUD && supabase) {
+      setBusy(true);
+      try {
+        if (!form.id) {
+          const r = await supabase.rpc("admin_create_user", { p_email: form.email, p_password: form.password, p_name: form.name, p_role: ROLE_TO_DB[form.role], p_driver: form.role === "Driver" && form.driverId ? form.driverId : null });
+          if (rpcErr(r.error)) return;
+        } else if (form.password) {
+          const r = await supabase.rpc("admin_set_password", { p_id: form.id, p_password: form.password });
+          if (rpcErr(r.error)) return;
+        }
+        if (form.id) set((d) => { const i = d.users.findIndex((u) => u.id === form.id); if (i >= 0) d.users[i] = { ...form, password: "" }; });
+        else await reload();
+      } finally { setBusy(false); }
+      toast("User saved"); setForm(null); return;
+    }
     set((d) => {
       if (form.id) { const i = d.users.findIndex((u) => u.id === form.id); if (i >= 0) d.users[i] = form; }
       else d.users.push({ ...form, id: uid() });
@@ -28,13 +48,24 @@ export default function Admin() {
     toast("User saved");
     setForm(null);
   };
+  const removeUser = async () => {
+    const u = delUser; if (!u) return;
+    if (u.id === user?.id) { setDelUser(null); return toast("You cannot delete your own account", "error"); }
+    if (CLOUD && supabase) {
+      const r = await supabase.rpc("admin_delete_user", { p_id: u.id });
+      if (rpcErr(r.error)) return;
+      await reload();
+    } else set((d) => { d.users = d.users.filter((x) => x.id !== u.id); d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "User deleted", detail: `${u.name} (${u.role})` }); });
+    toast("User deleted"); setDelUser(null);
+  };
 
   const isSuper = user?.role === "Super Admin";
 
   return (
     <div>
       <PageHeader title="Users, Roles & Security" subtitle="Role-based access control, audit log, backup guidance"
-        actions={isSuper && !CLOUD ? <Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add User</Button> : <span className="text-xs text-gray-500">{CLOUD ? "Add users in Supabase → Authentication, then set role/status here" : "User management is restricted to Super Admin"}</span>} />
+        actions={isSuper ? <Button onClick={() => setForm(blank())}><Plus className="w-4 h-4" /> Add User</Button> : <span className="text-xs text-gray-500">Only a Super Admin can add or remove users</span>}
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <Stat label="Users" value={db.users.length} icon={<UserCog className="w-5 h-5" />} tone="green" />
@@ -56,7 +87,8 @@ export default function Admin() {
                 <td className="px-3 py-2 text-xs">{db.drivers.find((d) => d.id === u.driverId)?.name || "—"}</td>
                 <td className="px-3 py-2"><Badge cls={u.active ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-700"}>{u.active ? "Active" : "Disabled"}</Badge></td>
                 <td className="px-3 py-2 space-x-2">
-                  {isSuper ? <button className="text-xs text-blue-700 hover:underline" onClick={() => setForm({ ...u })}>Edit</button> : null}
+                  {isSuper ? <button className="text-xs text-blue-700 hover:underline" onClick={() => setForm({ ...u, password: "" })}>Edit</button> : null}
+                  {isSuper && u.id !== user?.id ? <button className="text-xs text-red-700 hover:underline" onClick={() => setDelUser(u)}>Delete</button> : null}
                   {isSuper ? <button className="text-xs text-red-700 hover:underline" onClick={() => { set((d) => { const x = d.users.find((y) => y.id === u.id); if (x) x.active = !x.active; d.audits.unshift({ id: uid(), time: new Date().toISOString(), user: user?.name || "Admin", action: "User status toggled", detail: u.email }); }); toast("User status changed"); }}>{u.active ? "Disable" : "Enable"}</button> : null}
                 </td>
               </tr>
@@ -126,16 +158,17 @@ export default function Admin() {
         </div>
       )}
 
+      <Confirm open={!!delUser} onCancel={() => setDelUser(null)} onConfirm={removeUser} message={`Delete ${delUser?.name} (${delUser?.email})? They will no longer be able to sign in.`} />
       <Modal open={!!form} onClose={() => setForm(null)} title={form?.id ? "Edit User" : "Add User"}>
         {form && (
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Full Name" required><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
             <Field label="Email" required><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-            {!CLOUD && <Field label="Password" required hint="Demo only"><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>}
+            <Field label="Password" required={!form.id} hint={form.id && CLOUD ? "Leave empty to keep the current password" : "At least 6 characters"}><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
             <Field label="Role"><Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>{ROLES.map((r) => <option key={r}>{r}</option>)}</Select></Field>
             {form.role === "Driver" && <Field label="Linked Driver Record" className="sm:col-span-2"><Select value={form.driverId || ""} onChange={(e) => setForm({ ...form, driverId: e.target.value })}><option value="">Select driver</option>{db.drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></Field>}
             <Field label="Status"><Select value={form.active ? "1" : "0"} onChange={(e) => setForm({ ...form, active: e.target.value === "1" })}><option value="1">Active</option><option value="0">Disabled</option></Select></Field>
-            <div className="sm:col-span-2 flex justify-end gap-2"><Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button><Button onClick={save}>Save User</Button></div>
+            <div className="sm:col-span-2 flex justify-end gap-2"><Button variant="secondary" onClick={() => setForm(null)}>Cancel</Button><Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save User"}</Button></div>
           </div>
         )}
       </Modal>

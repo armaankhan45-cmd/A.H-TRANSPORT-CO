@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Search, ChevronDown, Inbox } from "lucide-react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 
@@ -96,7 +97,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 p-0 sm:p-3 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
       <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-7xl" : "max-w-5xl"} sm:my-0 min-h-dvh sm:min-h-0`}>
         <div className="flex items-center justify-between px-4 py-3 mhead border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
@@ -105,12 +106,13 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
         </div>
         <div className="p-4 sm:max-h-[calc(100dvh-5.5rem)] overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 export function Confirm({ open, onCancel, onConfirm, message }: { open: boolean; onCancel: () => void; onConfirm: () => void; message: string }) {
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" role="alertdialog" aria-modal="true">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5">
         <h3 className="font-semibold mb-2">Please confirm</h3>
@@ -120,7 +122,8 @@ export function Confirm({ open, onCancel, onConfirm, message }: { open: boolean;
           <Button variant="danger" onClick={onConfirm}>Delete</Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 export function SearchBox({ value, onChange, placeholder = "Search…" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
