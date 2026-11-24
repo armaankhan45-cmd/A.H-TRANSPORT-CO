@@ -72,13 +72,13 @@ export default function Home({ onNavigate }: { onNavigate: (p: string) => void }
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-3 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3 rise">
-            <button onClick={go("lr", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-signal text-slate-900 p-5 text-left hover:bg-signal-dark transition">
+            <button onClick={go("lr", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-signal text-[#0b1017] p-5 text-left hover:bg-signal-dark transition">
               <FilePlus2 className="w-10 h-10 shrink-0" strokeWidth={1.7} />
               <span><b className="block text-2xl font-display">New LR</b><span className="text-sm">Transport receipt</span></span>
             </button>
-            <button onClick={go("tcc", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-slate-900 text-white p-5 text-left hover:bg-slate-800 transition">
+            <button onClick={go("tcc", true)} className="group card-lift flex items-center gap-4 rounded-xl bg-[#0b1017] text-white border border-slate-300 p-5 text-left hover:border-slate-500 transition">
               <Droplets className="w-10 h-10 shrink-0 text-signal" strokeWidth={1.7} />
-              <span><b className="block text-2xl font-display">New TCC</b><span className="text-sm text-slate-200">Tanker cleaning certificate</span></span>
+              <span><b className="block text-2xl font-display text-white">New TCC</b><span className="text-sm text-[#cbd5e1]">Tanker cleaning certificate</span></span>
             </button>
           </div>
 

@@ -36,8 +36,8 @@ export function Button({ children, onClick, variant = "primary", className = "",
   children: React.ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" | "ghost" | "success"; className?: string; type?: "button" | "submit"; disabled?: boolean; size?: "sm" | "md";
 }) {
   const v: Record<string, string> = {
-    primary: "key bg-signal text-slate-900 font-semibold hover:bg-signal-dark",
-    success: "bg-green-600 text-white hover:bg-green-700",
+    primary: "key bg-signal text-[#0b1017] font-semibold hover:bg-signal-dark",
+    success: "bg-ink text-white hover:bg-ink-hover",
     secondary: "key bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 hover:border-slate-400",
     danger: "bg-red-600 text-white hover:bg-red-700",
     ghost: "text-gray-600 hover:bg-gray-100",
@@ -45,11 +45,12 @@ export function Button({ children, onClick, variant = "primary", className = "",
   const s = size === "sm" ? "px-2.5 py-1.5 text-xs min-h-8" : "px-4 py-2 text-sm min-h-10";
   return <button type={type} disabled={disabled} onClick={onClick} className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed ${v[variant]} ${s} ${className}`}>{children}</button>;
 }
+const InField = React.createContext(false);
 export function Field({ label, children, required, hint, className = "" }: { label: string; children: React.ReactNode; required?: boolean; hint?: string; className?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="block text-[13px] font-medium text-slate-700 mb-1">{label}{required && <span className="text-red-500"> *</span>}</span>
-      {children}
+      <span className="block text-[13px] font-medium text-slate-700 mb-1">{label}{required && <span className="text-red-600"> *</span>}</span>
+      <InField.Provider value={true}>{children}</InField.Provider>
       {hint && <span className="block text-[11px] text-gray-400 mt-0.5">{hint}</span>}
     </label>
   );
@@ -61,11 +62,12 @@ export function Input(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const d = p.value ? new Date(String(p.value)) : null;   // phones show dates in the US order: spell it out so nobody mixes up day and month
   return <div>{el}{d && !isNaN(d.getTime()) && <p className="text-xs font-semibold text-gray-600 mt-1">{d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>}</div>;
 }
-export function Textarea(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { return <textarea {...p} className={`${inputCls} ${p.className || ""}`} />; }
+export function Textarea(p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) { const named = React.useContext(InField); return <textarea aria-label={named ? undefined : p["aria-label"] ?? p.placeholder ?? "Notes"} {...p} className={`${inputCls} ${p.className || ""}`} />; }
 export function Select({ children, ...p }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const named = React.useContext(InField);
   return (
     <div className="relative">
-      <select {...p} className={`${inputCls} appearance-none pr-8 ${p.className || ""}`}>{children}</select>
+      <select aria-label={named ? undefined : p["aria-label"] ?? p.title ?? "Filter"} {...p} className={`${inputCls} appearance-none pr-8 ${p.className || ""}`}>{children}</select>
       <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-2.5 pointer-events-none" />
     </div>
   );
@@ -95,7 +97,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 p-0 sm:p-4 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 p-0 sm:p-4 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
       <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-dvh sm:min-h-0`}>
         <div className="flex items-center justify-between px-4 py-3 mhead border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
           <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
@@ -109,7 +111,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
 export function Confirm({ open, onCancel, onConfirm, message }: { open: boolean; onCancel: () => void; onConfirm: () => void; message: string }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4" role="alertdialog" aria-modal="true">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" role="alertdialog" aria-modal="true">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5">
         <h3 className="font-semibold mb-2">Please confirm</h3>
         <p className="text-sm text-gray-600 mb-4">{message}</p>
@@ -159,7 +161,7 @@ export function FileField({ label, value, onChange, accept = "image/*,applicatio
   const [busy, setBusy] = useState(false);
   return (
     <Field label={label} hint="">
-      <input type="file" accept={accept} className="block w-full text-xs text-gray-600 file:mr-2 file:rounded-md file:border-0 file:bg-green-800 file:px-3 file:py-1.5 file:text-white"
+      <input type="file" accept={accept} className="block w-full text-xs text-gray-600 file:mr-2 file:rounded-md file:border-0 file:bg-ink file:px-3 file:py-1.5 file:text-white"
         onChange={(e) => {
           const f = e.target.files?.[0]; if (!f) return;
           if (f.size > 1.5 * 1024 * 1024) { alert("This file is larger than 1.5 MB. Choose a smaller file or take a lower-resolution photo."); }

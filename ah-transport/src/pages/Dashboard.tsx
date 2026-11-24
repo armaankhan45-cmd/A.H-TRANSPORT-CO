@@ -149,7 +149,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (p: string) => v
             <h3 className="font-semibold text-sm flex items-center gap-2"><FileWarning className="w-4 h-4 text-red-600" /> Document Expiry Alerts</h3>
             <Button size="sm" variant="ghost" onClick={() => onNavigate("expiry")}>View all <ArrowRight className="w-3 h-3" /></Button>
           </div>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+          <div tabIndex={0} className="space-y-1.5 max-h-64 overflow-y-auto">
             {[...expired, ...expiring].slice(0, 10).map((d) => {
               const v = db.vehicles.find((x) => x.id === d.vehicleId);
               const info = expiryInfo(d.expiryDate);
@@ -168,7 +168,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (p: string) => v
             <h3 className="font-semibold text-sm flex items-center gap-2"><Route className="w-4 h-4 text-blue-600" /> Live Trip Status</h3>
             <Button size="sm" variant="ghost" onClick={() => onNavigate("trips")}>Trips <ArrowRight className="w-3 h-3" /></Button>
           </div>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+          <div tabIndex={0} className="space-y-1.5 max-h-64 overflow-y-auto">
             {db.trips.filter((t) => !["Completed", "Cancelled"].includes(t.status)).map((t) => (
               <div key={t.id} className="flex items-center justify-between gap-2 text-xs border-b border-gray-100 pb-1.5">
                 <span className="min-w-0"><span className="font-semibold">{t.tripNo}</span> <span className="text-gray-500">{db.vehicles.find((v) => v.id === t.vehicleId)?.regNo} · {t.material}</span></span>

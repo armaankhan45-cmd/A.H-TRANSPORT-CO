@@ -63,20 +63,20 @@ function SendCard({ token }: { token: string }) {
     else setMsg({ ok: false, text: "Not sent. Check your internet and try again." });
   };
   return (
-    <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 mt-4">
+    <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-emerald-100 p-6 mt-4">
       <p className="text-xl font-bold text-center">Send to the office</p>
       <div className="grid grid-cols-3 gap-2 mt-4">
         {kinds.map((k) => (
-          <button key={k} onClick={() => setKind(k)} className={`rounded-xl py-3 text-sm font-bold leading-tight ${kind === k ? "bg-green-700 text-white" : "bg-slate-100 text-slate-700"}`}>{k}</button>
+          <button key={k} onClick={() => setKind(k)} className={`rounded-xl py-3 text-sm font-bold leading-tight ${kind === k ? "bg-emerald-700 text-white" : "bg-slate-100 text-slate-700"}`}>{k}</button>
         ))}
       </div>
       <label className="block mt-4 rounded-2xl border-2 border-dashed border-slate-300 text-center py-5 font-bold text-slate-700 active:scale-[0.98]">
         {photo ? <img src={photo} alt="" className="mx-auto max-h-48 rounded-lg" /> : "Take or choose a photo"}
         <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
       </label>
-      <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={2} placeholder="Note (optional)" className="w-full mt-3 rounded-xl border border-slate-300 p-3 text-base" />
-      {msg && <p className={`mt-3 text-center font-bold ${msg.ok ? "text-green-700" : "text-red-700"}`}>{msg.text}</p>}
-      <button disabled={busy} onClick={sendIt} className="w-full rounded-2xl bg-green-700 text-white font-extrabold py-4 text-xl mt-3 disabled:opacity-60">{busy ? "Sending…" : "Send"}</button>
+      <textarea aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={2} placeholder="Note (optional)" className="w-full mt-3 rounded-xl border border-slate-300 p-3 text-base" />
+      {msg && <p className={`mt-3 text-center font-bold ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>{msg.text}</p>}
+      <button disabled={busy} onClick={sendIt} className="w-full rounded-2xl bg-emerald-700 text-white font-extrabold py-4 text-xl mt-3 disabled:opacity-60">{busy ? "Sending…" : "Send"}</button>
     </div>
   );
 }
@@ -152,34 +152,34 @@ export default function TrackShare({ token }: { token: string }) {
 
   const big = "w-full rounded-2xl text-white font-extrabold py-5 text-2xl leading-tight active:scale-[0.98] transition";
   return (
-    <div className="min-h-dvh bg-green-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-green-100 p-6 text-center">
-        <p className="text-xs font-bold tracking-wide text-green-800 uppercase">{COMPANY.display}</p>
+    <div className="min-h-dvh bg-emerald-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg border border-emerald-100 p-6 text-center">
+        <p className="text-xs font-bold tracking-wide text-emerald-800 uppercase">{COMPANY.display}</p>
         {info === undefined && <p className="py-10 text-lg text-gray-500">…</p>}
         {info === null && <div className="py-8"><p className="text-lg font-bold">This link is not active</p><p className="text-sm text-gray-500 mt-2">Ask the office to send you a new link.</p></div>}
         {info && (
           <>
-            <div className={`mx-auto my-5 w-24 h-24 rounded-full grid place-items-center ${phase === "sharing" ? "bg-green-600" : "bg-green-100"}`}>
-              <MapPin className={`w-12 h-12 ${phase === "sharing" ? "text-white" : "text-green-700"}`} />
+            <div className={`mx-auto my-5 w-24 h-24 rounded-full grid place-items-center ${phase === "sharing" ? "bg-emerald-700" : "bg-emerald-100"}`}>
+              <MapPin className={`w-12 h-12 ${phase === "sharing" ? "text-white" : "text-emerald-700"}`} />
             </div>
             <p className="text-xl font-bold">{info.name.split(" ")[0]}{info.vehicle ? ` · ${info.vehicle}` : ""}</p>
 
             {phase === "ask" && (<>
               <p className="text-xl font-bold mt-4 leading-snug">Share your truck location with {COMPANY.display}?</p>
               <p className="text-sm text-gray-600 mt-2">You are only asked once. The office decides when sharing ends.</p>
-              <button onClick={start} className={`${big} bg-green-700 mt-6`}>Yes, share</button>
+              <button onClick={start} className={`${big} bg-emerald-700 mt-6`}>Yes, share</button>
               <button onClick={() => setPhase("declined")} className="w-full rounded-2xl border-2 border-slate-300 text-slate-700 font-bold py-4 text-xl mt-3">No</button>
             </>)}
 
             {phase === "sharing" && (<>
-              <p className="text-2xl font-extrabold text-green-700 mt-4">Location sharing is on</p>
+              <p className="text-2xl font-extrabold text-emerald-700 mt-4">Location sharing is on</p>
               <p className="text-sm text-gray-600 mt-2">Thank you. The office can see your truck{lastSent ? ` · last sent ${lastSent}` : ""}.</p>
               {problem && <p className="text-sm text-amber-700 mt-2">Waiting for GPS signal…</p>}
               <button onClick={stopNow} className="mt-8 text-sm text-slate-500 underline">Stop sharing</button>
             </>)}
 
             {phase === "declined" && <><p className="mt-4 text-xl font-bold">Nothing is shared</p><p className="text-sm text-gray-600 mt-2">You chose No. You can close this page.</p><button onClick={() => setPhase("ask")} className="mt-6 text-sm text-slate-500 underline">Change my answer</button></>}
-            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">Location sharing stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-green-700 mt-6`}>Share again</button></>}
+            {phase === "stopped" && <><p className="mt-4 text-xl font-bold">Location sharing stopped</p><button onClick={() => setPhase("ask")} className={`${big} bg-emerald-700 mt-6`}>Share again</button></>}
             {phase === "denied" && <><p className="mt-4 text-lg font-bold text-red-700">Location permission is blocked</p><p className="text-sm text-gray-600 mt-2">Allow location for this site in your phone settings, then open this page again.</p></>}
             {phase === "nogps" && <p className="mt-4 text-lg font-bold text-red-700">This phone cannot share location</p>}
           </>

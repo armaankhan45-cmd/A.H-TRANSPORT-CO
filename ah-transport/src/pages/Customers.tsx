@@ -54,7 +54,7 @@ export default function Customers() {
                 <td className="px-3 py-2"><Badge cls="bg-blue-100 text-blue-800">{c.type}</Badge></td>
                 <td className="px-3 py-2 text-xs">{c.terms}</td>
                 <td className="px-3 py-2 text-xs">{trips.length}</td>
-                <td className="px-3 py-2"><button onClick={() => setForm({ ...c })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button></td>
+                <td className="px-3 py-2"><button onClick={() => setForm({ ...c })} title="Edit" aria-label="Edit" className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button></td>
               </tr>
             );
           })}

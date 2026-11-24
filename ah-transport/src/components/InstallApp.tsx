@@ -21,7 +21,7 @@ export default function InstallApp() {
   const go = async () => { if (evt) { await evt.prompt(); await evt.userChoice; setEvt(null); } else setHelp(true); };
   return (
     <div className="mb-4 rounded-lg border border-slate-300/70 bg-white p-3 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-md bg-green-950 grid place-items-center shrink-0"><Download className="w-5 h-5 text-signal" /></div>
+      <div className="w-10 h-10 rounded-md bg-ink grid place-items-center shrink-0"><Download className="w-5 h-5 text-signal" /></div>
       <div className="flex-1 min-w-0"><p className="font-semibold leading-tight">Install the app</p><p className="text-sm text-slate-600">Opens full screen from your home screen, like any other app.</p></div>
       <button onClick={go} className="rounded-md bg-signal px-4 py-2 font-semibold text-slate-900 hover:bg-signal-dark">Install</button>
       <button onClick={dismiss} aria-label="Hide" className="p-1 text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
@@ -34,7 +34,7 @@ export default function InstallApp() {
               <li>Tap the Share button <Share className="inline w-4 h-4" /> at the bottom.</li>
               <li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>
             </ol>
-            <button onClick={() => setHelp(false)} className="mt-4 w-full rounded-md bg-green-900 text-white py-2.5 font-semibold">Got it</button>
+            <button onClick={() => setHelp(false)} className="mt-4 w-full rounded-md bg-ink text-white py-2.5 font-semibold">Got it</button>
           </div>
         </div>
       )}

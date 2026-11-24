@@ -71,7 +71,7 @@ export default function Expenses() {
                   <td className="px-3 py-2 text-xs">{e.receipt ? <span className="text-green-700 inline-flex items-center gap-1"><Receipt className="w-3.5 h-3.5" /> yes</span> : "—"}</td>
                   <td className="px-3 py-2 text-xs">{e.method}</td>
                   <td className="px-3 py-2 text-xs font-bold">{fmtINR(e.amount)}</td>
-                  <td className="px-3 py-2"><button onClick={() => setForm({ ...e })} className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button></td>
+                  <td className="px-3 py-2"><button onClick={() => setForm({ ...e })} title="Edit" aria-label="Edit" className="p-1.5 rounded hover:bg-gray-100"><Pencil className="w-4 h-4 text-blue-600" /></button></td>
                 </tr>
               ))}
             </Table>
@@ -85,7 +85,7 @@ export default function Expenses() {
           <Table headers={["Vehicle", "Total expense", "Share"]}>
             {byVehicle.sort((a, b) => b[1] - a[1]).map(([k, v]) => {
               const total = db.expenses.reduce((a, e) => a + e.amount, 0) || 1;
-              return <tr key={k}><td className="px-3 py-2 text-xsfont-semibold font-semibold">{k}</td><td className="px-3 py-2 text-xs">{fmtINR(v)}</td><td className="px-3 py-2"><div className="w-40 bg-gray-100 rounded h-2"><div className="bg-green-600 h-2 rounded" style={{ width: `${(v / total) * 100}%` }} /></div></td></tr>;
+              return <tr key={k}><td className="px-3 py-2 text-xsfont-semibold font-semibold">{k}</td><td className="px-3 py-2 text-xs">{fmtINR(v)}</td><td className="px-3 py-2"><div className="w-40 bg-gray-100 rounded h-2"><div className="bg-ink h-2 rounded" style={{ width: `${(v / total) * 100}%` }} /></div></td></tr>;
             })}
           </Table>
         </Card>
