@@ -97,13 +97,13 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 p-0 sm:p-4 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
-      <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-5xl" : "max-w-3xl"} sm:my-4 min-h-dvh sm:min-h-0`}>
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 p-0 sm:p-3 mwrap overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`bg-white sm:rounded-2xl shadow-2xl w-full ${wide ? "max-w-7xl" : "max-w-5xl"} sm:my-0 min-h-dvh sm:min-h-0`}>
         <div className="flex items-center justify-between px-4 py-3 mhead border-b border-slate-200 sticky top-0 bg-white sm:rounded-t-2xl z-10">
           <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
           <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
         </div>
-        <div className="p-4 sm:max-h-[80dvh] overflow-y-auto">{children}</div>
+        <div className="p-4 sm:max-h-[calc(100dvh-5.5rem)] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
